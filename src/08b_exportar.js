@@ -56,7 +56,7 @@ function ligarTips(root){
   if(!tip){ tip=document.createElement('div'); tip.className='tip'; document.body.appendChild(tip); }
   root.querySelectorAll('[data-tip]').forEach(el=>{
     el.addEventListener('mousemove',e=>{
-      tip.innerHTML=el.getAttribute('data-tip'); tip.style.opacity='1';
+      tip.textContent=el.getAttribute('data-tip'); tip.style.opacity='1';
       const r=tip.getBoundingClientRect();
       tip.style.left=Math.min(e.clientX+14, innerWidth-r.width-10)+'px';
       tip.style.top=Math.max(e.clientY-r.height-12,8)+'px';
@@ -363,7 +363,7 @@ footer.fim{padding:24px;text-align:center;color:#64748B;font-size:11.5px}
 </div>
 <footer class="fim">Grupo Brilhante · Juína/MT · Painel gerado pelo Sistema de Ordens de Serviço de Frotas.<br>
 Produzir Alimento, Gerar Sustento e Trazer Desenvolvimento.</footer>
-<script>const D=${JSON.stringify(dados)};
+<script>const D=${JSON.stringify(dados).replace(/</g, '\\u003c')};
 ${RUNTIME}
 <\/script>
 </body></html>`;

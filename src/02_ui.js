@@ -21,7 +21,7 @@ const Chart = (() => {
   function ligarTooltips(root) {
     root.querySelectorAll('[data-tip]').forEach(el => {
       el.addEventListener('mousemove', e => {
-        const t = tooltip(); t.innerHTML = el.getAttribute('data-tip'); t.style.opacity = '1';
+        const t = tooltip(); t.textContent = el.getAttribute('data-tip'); t.style.opacity = '1';
         const r = t.getBoundingClientRect();
         t.style.left = Math.min(e.clientX + 14, innerWidth - r.width - 10) + 'px';
         t.style.top = Math.max(e.clientY - r.height - 12, 8) + 'px';

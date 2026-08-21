@@ -244,13 +244,41 @@ const App = {
     f.addEventListener('submit', e => {
       e.preventDefault();
       const erro = Auth.entrar(f.u.value, f.s.value);
-      if (!erro) { location.hash = '#/' + Auth.paginaInicial(); App.render(); }
+      if (!erro) {
+        // Login OK → só então roda a animação de entrada; navegação/render inalterados.
+        App.animarEntrada(() => { location.hash = '#/' + Auth.paginaInicial(); App.render(); });
+      }
       else {
         document.getElementById('login-err').innerHTML = `<div class="login-err">${Fmt.esc(erro)}</div>`;
         f.s.value = ''; f.s.focus();
       }
     });
     setTimeout(() => { const u = document.getElementById('u'); if (u) u.focus(); }, 60);
+  },
+
+  /** Cortina cinematográfica logo→sistema. Só é chamada após login válido. */
+  animarEntrada(cb) {
+    let reduz = false;
+    try { reduz = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { }
+    if (reduz) {                                   // acessibilidade: sem movimento
+      cb();
+      const flash = document.createElement('div'); flash.id = 'entrada-anim';
+      flash.innerHTML = `<div class="ea-stage"><span class="ea-logo">${LOGO_SVG}</span></div>`;
+      document.body.appendChild(flash);
+      setTimeout(() => { flash.classList.add('ea-out'); setTimeout(() => flash.remove(), 600); }, 500);
+      return;
+    }
+    const parts = Array.from({ length: 16 }, (_, i) => {
+      const a = (i / 16) * Math.PI * 2, d = 120 + (i % 3) * 34;
+      const x = Math.round(Math.cos(a) * d), y = Math.round(Math.sin(a) * d);
+      return `<span class="ea-part" style="--x:${x}px;--y:${y}px;animation-delay:${(0.7 + (i % 5) * 0.11).toFixed(2)}s"></span>`;
+    }).join('');
+    const ov = document.createElement('div');
+    ov.id = 'entrada-anim';
+    ov.innerHTML = `<div class="ea-stage"><div class="ea-halo"></div><span class="ea-logo">${LOGO_SVG}</span>${parts}</div>`;
+    document.body.appendChild(ov);
+    setTimeout(cb, 420);                            // sistema renderiza por baixo da cortina
+    setTimeout(() => { ov.classList.add('ea-out'); setTimeout(() => ov.remove(), 640); }, 2680);
   },
 };
 
