@@ -213,7 +213,7 @@ const Nova = (() => {
       <h3>Possível reincidência</h3>
       <p style="margin-bottom:10px">Este veículo já esteve na oficina pelo mesmo sistema nos últimos ${DB.cfg().janelaReincidencia} dias.
       Confira o histórico antes de fechar a OS.</p>
-      <div class="tw" style="background:#fff;border-radius:8px"><table>
+      <div class="tw reinc-tbl"><table>
         <thead><tr><th>Data</th><th>Sistema</th><th>Serviço realizado</th><th>Mecânico</th><th class="ta-r">Valor</th><th class="ta-r">Intervalo</th></tr></thead>
         <tbody>${linhas}</tbody></table></div>
       <div style="margin-top:10px"><button type="button" class="btn ghost sm" data-hist="${Fmt.esc(os.veiculoId)}">Ver histórico completo</button></div>
@@ -436,12 +436,16 @@ const Ordens = (() => {
       mec: Fmt.esc(o.mecanico || '—'),
       serv: `<span class="dim">${o.itens.length} ${o.itens.length === 1 ? 'serviço' : 'serviços'}</span>`,
       total: `<span class="strong nowrap">${Fmt.money(o.total)}</span>`,
+      reg: o.criadoData
+        ? `<div class="nowrap">${Fmt.date(o.criadoData)} · ${Fmt.esc(o.criadoHora || '')}</div><div class="dim" style="font-size:11.5px">por ${Fmt.esc(o.criadoPor || '—')}</div>`
+        : '<span class="dim">—</span>',
       st: UI.badgeStatus(o.status),
     }));
     const cols = [
       { t: 'Nº', k: 'n' }, { t: 'Data', k: 'data', s: 'data' }, { t: 'Veículo / placa / frota', k: 'veic', s: 'veiculo' },
       { t: 'Local', k: 'local', s: 'local' }, { t: 'Condutor', k: 'cond' }, { t: 'Mecânico', k: 'mec', s: 'mecanico' },
-      { t: 'Serviços', k: 'serv' }, { t: 'Total', k: 'total', cls: 'ta-r', s: 'total' }, { t: 'Situação', k: 'st' },
+      { t: 'Serviços', k: 'serv' }, { t: 'Total', k: 'total', cls: 'ta-r', s: 'total' },
+      { t: 'Registrado', k: 'reg', s: 'criadoData' }, { t: 'Situação', k: 'st' },
     ];
     const cabec = cols.map(c => `<th class="${c.cls || ''}${c.s ? ' sortable' : ''}"${c.s ? ` data-ord="${c.s}"` : ''}>${c.t}${ord.campo === c.s ? (d > 0 ? ' ↑' : ' ↓') : ''}</th>`).join('');
     const corpo = linhas.length

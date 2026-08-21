@@ -355,3 +355,11 @@ tbody tr.clickable{cursor:pointer} tbody tr.clickable:hover{background:var(--roy
 /* --------------------------------------------------- auditoria da OS */
 .audit-line{margin-top:var(--s4); padding-top:var(--s3); border-top:1px dashed var(--line-2); font-size:12px; color:var(--muted)}
 .audit-line strong{color:var(--ink-2); font-weight:600}
+
+/* --------------------------------------------------- tabela dentro do aviso de reincidência */
+.alert-box .reinc-tbl{background:var(--surface-2); border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.alert-box .reinc-tbl th{background:transparent; color:var(--muted); border-bottom:1px solid var(--line)}
+.alert-box .reinc-tbl td{color:var(--ink-2); border-bottom:1px solid var(--line)}
+.alert-box .reinc-tbl tbody tr:last-child td{border-bottom:0}
+.alert-box .reinc-tbl td strong{color:var(--ink)}
+.alert-box .reinc-tbl .dim{color:var(--muted)}
