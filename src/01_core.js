@@ -32,7 +32,8 @@ const Dt = (() => {
   const monthStart = i => i.slice(0, 8) + '01';
   const monthEnd = i => { const x = d(i); return iso(new Date(x.getFullYear(), x.getMonth() + 1, 0)); };
   const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-  return { today, add, diff, weekStart, monthStart, monthEnd, iso, d, diaSemana: i => DIAS[d(i).getDay()] };
+  const agora = () => { const x = new Date(), p = n => String(n).padStart(2, '0'); return { data: iso(x), hora: p(x.getHours()) + ':' + p(x.getMinutes()) }; };
+  return { today, agora, add, diff, weekStart, monthStart, monthEnd, iso, d, diaSemana: i => DIAS[d(i).getDay()] };
 })();
 
 /* ---------- Rec: grupos de problema e reincidência ---------- */
@@ -237,12 +238,18 @@ const DB = (() => {
 
   function salvarOS(os) {
     const b = get();
-    if (os.id) {
+    // Carimbo de auditoria: quem registrou/alterou e quando (não editável pelo usuário).
+    const quem = (typeof Estado !== 'undefined' && Estado.usuario) ? (Estado.usuario.nome || Estado.usuario.usuario) : '';
+    const ag = Dt.agora();
+    if (os.id && b.ordens.some(o => o.id === os.id)) {
+      os.alteradoPor = quem; os.alteradoData = ag.data; os.alteradoHora = ag.hora;   // preserva a criação original
       const i = b.ordens.findIndex(o => o.id === os.id);
-      if (i >= 0) b.ordens[i] = os; else b.ordens.push(os);
+      b.ordens[i] = os;
     } else {
       os.id = 'OS' + Date.now().toString(36).toUpperCase();
       os.numero = proximoNumero();
+      os.criadoPor = quem; os.criadoData = ag.data; os.criadoHora = ag.hora;
+      delete os.alteradoPor; delete os.alteradoData; delete os.alteradoHora;
       b.ordens.push(os);
     }
     // atualiza KM/H do veículo e cadastros auxiliares

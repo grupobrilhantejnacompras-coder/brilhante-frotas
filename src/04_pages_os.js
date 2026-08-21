@@ -85,9 +85,13 @@ const Nova = (() => {
       itens: [linhaVazia()], obs: '', status: 'Concluída', total: 0, origem: 'sistema'
     };
     if (!os.itens.length) os.itens.push(linhaVazia());
+    // responsáveis (múltiplos) derivados do campo mecanico existente ao editar
+    if (!Array.isArray(os.responsaveis))
+      os.responsaveis = os.mecanico ? String(os.mecanico).split(',').map(s => s.trim()).filter(Boolean) : [];
     return os;
   }
   const linhaVazia = () => ({ qtd: 1, servicoCod: '', descricao: '', valorUnit: 0, total: 0 });
+  const MECANICOS_FIXOS = ['Jefesson', 'Allan', 'Gemerson', 'Vandame', 'Tião'];
 
   function pagina(params) {
     const b = DB.get();
@@ -109,9 +113,11 @@ const Nova = (() => {
           <div class="field"><label for="f-condutor">Condutor</label>
             <input class="input" id="f-condutor" list="dl-cond" placeholder="Nome do condutor" value="${Fmt.esc(os.condutor)}">
             ${datalist('dl-cond', b.condutores)}</div>
-          <div class="field"><label for="f-mec">Mecânico responsável</label>
-            <input class="input" id="f-mec" list="dl-mec" placeholder="Quem executou" value="${Fmt.esc(os.mecanico)}" required>
-            ${datalist('dl-mec', b.mecanicos)}</div>
+          <div class="field" style="grid-column:1/-1"><label>Mecânico responsável</label>
+            <div class="perm-grid" id="mec-resp">
+              ${MECANICOS_FIXOS.map(n => `<label class="perm-item"><input type="checkbox" data-mec value="${Fmt.esc(n)}"${os.responsaveis.includes(n) ? ' checked' : ''}> ${Fmt.esc(n)}</label>`).join('')}
+            </div>
+            <div class="dim" style="font-size:11.5px;margin-top:5px">Marque um ou mais responsáveis pela execução.</div></div>
         </div>`)}
 
       ${UI.card('Veículo', `
@@ -345,8 +351,14 @@ const Nova = (() => {
     $('f-veic').addEventListener('input', () => { if (Veic.resolver($('f-veic').value.trim())) buscarVeiculo(); });
     $('f-veic').addEventListener('blur', () => buscarVeiculo());
     if ($('novo-veic')) $('novo-veic').addEventListener('mousedown', ev => { ev.preventDefault(); abrirCadastro($('f-veic').value.trim()); });
-    ['data', 'local', 'condutor', 'mec', 'obs', 'status'].forEach(k => {
-      const map = { data: 'data', local: 'local', condutor: 'condutor', mec: 'mecanico', obs: 'obs', status: 'status' };
+    // mecânicos responsáveis (checkboxes) → mantém os.mecanico como texto para relatórios/filtros
+    const sincMec = () => {
+      os.responsaveis = [...document.querySelectorAll('#mec-resp [data-mec]:checked')].map(c => c.value);
+      os.mecanico = os.responsaveis.join(', ');
+    };
+    document.querySelectorAll('#mec-resp [data-mec]').forEach(c => c.addEventListener('change', sincMec));
+    ['data', 'local', 'condutor', 'obs', 'status'].forEach(k => {
+      const map = { data: 'data', local: 'local', condutor: 'condutor', obs: 'obs', status: 'status' };
       $('f-' + k).addEventListener('input', e => {
         os[map[k]] = e.target.value;
         if (k === 'local') localAuto = false;
@@ -366,10 +378,11 @@ const Nova = (() => {
         UI.toast('Escolha o veículo — digite o nome, a placa ou cadastre um novo.', 'warn');
         $('f-veic').focus(); return;
       }
-      if (!(os.mecanico || '').trim()) {
-        UI.toast('Informe o mecânico responsável pela ordem de serviço.', 'warn');
-        $('f-mec').focus(); return;
+      if (!os.responsaveis || !os.responsaveis.length) {
+        UI.toast('Marque ao menos um mecânico responsável.', 'warn');
+        const c = document.querySelector('#mec-resp [data-mec]'); if (c) c.focus(); return;
       }
+      os.mecanico = os.responsaveis.join(', ');
       os.itens.forEach(i => {                                  // guarda final de quantidade e valor
         i.qtd = Math.max(1, +i.qtd || 1);
         i.valorUnit = Math.max(0, +i.valorUnit || 0);
@@ -504,9 +517,14 @@ const Ordens = (() => {
         <div class="grid g3">
           ${[['Data', Fmt.date(o.data)], ['Local do serviço', Fmt.esc(o.local || '—')], ['Condutor', Fmt.esc(o.condutor || '—')],
         ['Veículo', Fmt.esc(v.nome || '—')], ['Placa', Fmt.esc(o.placa)], ['Frota', Fmt.esc(o.frota)],
-        [o.unidade === 'H' ? 'Horímetro' : 'Quilometragem', Fmt.kmh(o.kmH, o.unidade)], ['Mecânico', Fmt.esc(o.mecanico)],
+        [o.unidade === 'H' ? 'Horímetro' : 'Quilometragem', Fmt.kmh(o.kmH, o.unidade)],
+        ['Mecânicos responsáveis', Fmt.esc(o.mecanico || '—')],
         ['Situação', UI.badgeStatus(o.status)]].map(([l, val]) =>
           `<div><div class="eyebrow">${l}</div><div class="strong" style="margin-top:3px">${val}</div></div>`).join('')}
+        </div>
+        <div class="audit-line">
+          ${o.criadoData ? `Registrado por <strong>${Fmt.esc(o.criadoPor || '—')}</strong> em ${Fmt.date(o.criadoData)} às ${Fmt.esc(o.criadoHora || '')}` : 'Registro importado da planilha'}
+          ${o.alteradoData ? ` · Última alteração por <strong>${Fmt.esc(o.alteradoPor || '—')}</strong> em ${Fmt.date(o.alteradoData)} às ${Fmt.esc(o.alteradoHora || '')}` : ''}
         </div>`, `<button class="btn ghost sm" data-acao="veiculo">Ver histórico do veículo</button>`)}
       ${UI.card('Serviços executados', UI.tabela(
           [{ t: 'Qtd', k: 'q' }, { t: 'Descrição', k: 'd' }, { t: 'Sistema', k: 'g' },
