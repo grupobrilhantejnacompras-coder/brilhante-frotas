@@ -275,7 +275,7 @@ const App = {
     }).join('');
     const ov = document.createElement('div');
     ov.id = 'entrada-anim';
-    ov.innerHTML = `<div class="ea-stage"><div class="ea-halo"></div><span class="ea-logo">${LOGO_SVG}</span>${parts}</div>`;
+    ov.innerHTML = `<div class="ea-stage"><span class="ea-logo">${LOGO_SVG}</span>${parts}</div>`;
     document.body.appendChild(ov);
     setTimeout(cb, 420);                            // sistema renderiza por baixo da cortina
     setTimeout(() => { ov.classList.add('ea-out'); setTimeout(() => ov.remove(), 640); }, 2680);
