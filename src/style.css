@@ -261,7 +261,7 @@ tbody tr.clickable{cursor:pointer} tbody tr.clickable:hover{background:var(--roy
 .chart{width:100%; overflow:visible}
 .chart-v{max-height:264px}
 .chart:not(.chart-v){max-height:420px}
-.chart text{font-family:var(--sans); font-size:11px; fill:var(--muted)}
+.chart text{font-family:var(--sans); font-size:11px; fill:var(--ink-2)}
 .chart .lbl-v{fill:var(--ink); font-weight:600}
 .chart .gl{stroke:var(--line); stroke-width:1}
 .bar{transition:opacity .13s} .bar:hover{opacity:.82}

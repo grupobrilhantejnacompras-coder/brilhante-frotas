@@ -41,7 +41,7 @@ const Chart = (() => {
     items.forEach((it, i) => {
       const y = i * (bh + gap), L = Math.max(3, (it.valor / max) * bw);
       const cor = it.destaque ? AMBAR : (o.cor || AZUL);
-      s += `<text x="0" y="${y + bh / 2 + 4}" style="font-size:11.5px;fill:#0F172A">${Fmt.esc(corta(it.rotulo, 24))}</text>`;
+      s += `<text x="0" y="${y + bh / 2 + 4}" style="font-size:11.5px;fill:var(--ink-2)">${Fmt.esc(corta(it.rotulo, 24))}</text>`;
       s += `<rect x="${lw}" y="${y + 4}" width="${bw}" height="${bh - 8}" rx="4" fill="${TRILHO}"/>`;
       const clic = it.filtro != null ? ` data-f="${Fmt.esc(it.filtro)}" style="cursor:pointer"` : '';
       s += `<rect class="bar" x="${lw}" y="${y + 4}" width="${L}" height="${bh - 8}" rx="4" fill="${cor}"${clic}` +
