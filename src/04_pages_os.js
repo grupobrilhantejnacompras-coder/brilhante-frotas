@@ -128,7 +128,7 @@ const Nova = (() => {
           <div class="field"><label for="f-frota">Frota</label>
             <input class="input" id="f-frota" value="${Fmt.esc(os.frota)}" readonly></div>
           <div class="field"><label for="f-km" id="lab-km">KM / Horímetro</label>
-            <input class="input" type="number" step="0.1" min="0" id="f-km" placeholder="Leitura atual" value="${os.kmH == null ? '' : os.kmH}">
+            <input class="input" type="number" inputmode="decimal" step="0.1" min="0" id="f-km" placeholder="Leitura atual" value="${os.kmH == null ? '' : os.kmH}">
             <div class="k-sub dim" id="km-ajuda" style="font-size:11.5px;margin-top:5px"></div></div>
         </div>`)}
 
@@ -160,13 +160,13 @@ const Nova = (() => {
       <th>Qtd</th><th>Descrição do serviço</th><th class="ta-r" style="width:130px">Valor unitário</th>
       <th class="ta-r" style="width:130px">Valor total</th><th style="width:40px"></th></tr></thead><tbody>` +
       os.itens.map((it, i) => `<tr data-i="${i}">
-        <td data-l="Qtd"><input type="number" min="1" step="1" value="${it.qtd}" data-c="qtd" aria-label="Quantidade"></td>
+        <td data-l="Qtd"><input type="number" inputmode="numeric" min="1" step="1" value="${it.qtd}" data-c="qtd" aria-label="Quantidade"></td>
         <td class="serv" data-l="Serviço">
           <input data-c="descricao" list="dl-servicos" autocomplete="off"
             placeholder="Digite o serviço ou escolha da lista" value="${Fmt.esc(it.descricao)}" aria-label="Serviço executado">
           <div class="serv-ajuda" data-ajuda="${i}"></div>
         </td>
-        <td class="ta-r" data-l="Valor unit."><input type="number" min="0" step="0.01" value="${it.valorUnit || ''}" data-c="valorUnit" aria-label="Valor unitário"></td>
+        <td class="ta-r" data-l="Valor unit."><input type="number" inputmode="decimal" min="0" step="0.01" value="${it.valorUnit || ''}" data-c="valorUnit" aria-label="Valor unitário"></td>
         <td class="ta-r strong" data-l="Total"><span class="mono" data-tot>${Fmt.money(it.total)}</span></td>
         <td class="act"><button type="button" class="rm-btn" data-rm="${i}" aria-label="Remover serviço">✕</button></td>
       </tr>`).join('') + '</tbody></table></div>';
@@ -258,7 +258,11 @@ const Nova = (() => {
         el.addEventListener('input', () => {
           const c = el.dataset.c;
           if (c === 'qtd') os.itens[i].qtd = Math.max(1, +el.value || 1);
-          else if (c === 'valorUnit') os.itens[i].valorUnit = +el.value || 0;
+          else if (c === 'valorUnit') {
+            const v = Math.max(0, +el.value || 0);       // nunca aceita valor negativo
+            if (v !== +el.value && el.value !== '' && el.value !== '-') el.value = v || '';
+            os.itens[i].valorUnit = v;
+          }
           else if (c === 'descricao') {
             const it = os.itens[i];
             it.descricao = el.value;
@@ -362,8 +366,18 @@ const Nova = (() => {
         UI.toast('Escolha o veículo — digite o nome, a placa ou cadastre um novo.', 'warn');
         $('f-veic').focus(); return;
       }
+      if (!(os.mecanico || '').trim()) {
+        UI.toast('Informe o mecânico responsável pela ordem de serviço.', 'warn');
+        $('f-mec').focus(); return;
+      }
+      os.itens.forEach(i => {                                  // guarda final de quantidade e valor
+        i.qtd = Math.max(1, +i.qtd || 1);
+        i.valorUnit = Math.max(0, +i.valorUnit || 0);
+        i.total = +(i.qtd * i.valorUnit).toFixed(2);
+      });
       os.itens = os.itens.filter(i => (i.descricao || '').trim() && i.total >= 0);
       if (!os.itens.length) { UI.toast('Lance ao menos um serviço antes de salvar.', 'warn'); os.itens = [linhaVazia()]; ligarItens(); return; }
+      os.total = +os.itens.reduce((s, i) => s + i.total, 0).toFixed(2);
       const v = DB.veiculo(os.veiculoId);
       os.setor = os.itens.some(i => /ar.?cond|g[áa]s|compressor/i.test(i.descricao)) ? 'Ar Condicionado'
         : os.itens.some(i => /molejo|mola|estirante|quinta roda/i.test(i.descricao)) ? 'Posto de Mola' : 'Mecânica';
