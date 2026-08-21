@@ -13,10 +13,9 @@ js = '\n\n'.join((SRC / f).read_text(encoding='utf-8') for f in ORDEM)
 dados = json.load(open(BASE / 'dados_brilhante.json', encoding='utf-8'))
 logo = (BASE / 'logo_min.svg').read_text(encoding='utf-8').strip()
 
-# Versão: número sequencial guardado em VERSAO.txt + data da geração.
+# Versão: string em VERSAO.txt (ex.: 5.1) + data da geração. Ajuste o arquivo ao publicar.
 vfile = BASE / 'VERSAO.txt'
-versao = int(vfile.read_text().strip()) + 1 if vfile.exists() else 1
-vfile.write_text(str(versao))
+versao = vfile.read_text().strip() if vfile.exists() else '1'
 data_br = datetime.date.today().strftime('%d/%m/%Y')
 
 html = f"""<!DOCTYPE html>
