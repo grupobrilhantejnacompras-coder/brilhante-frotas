@@ -235,7 +235,7 @@ const App = {
       <div class="field"><label for="s">Senha</label>
         <input class="input" id="s" name="s" type="password" autocomplete="current-password" required></div>
       <button class="btn block" type="submit">Entrar</button>
-      <div class="login-foot">Juína · Mato Grosso <span class="versao">v${VERSAO.n} · ${VERSAO.data}</span></div>
+      <div class="login-foot">Juína · Mato Grosso <span class="versao">Developed by Kamau Rocha · v${VERSAO.n} · ${VERSAO.data}</span></div>
     </form></div>`;
   },
 
