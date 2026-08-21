@@ -1,0 +1,6 @@
+node_modules/
+shot-*.png
+backup-*.json
+Painel-Frotas-Brilhante-*.html
+deploy/
+*.zip
