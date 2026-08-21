@@ -53,7 +53,7 @@ const erros = [];
   ok('gravado na base', await p.evaluate(() => !!DB.get().veiculos.find(v => v.placa === 'SPX1A11')));
 
   // 5. salvar OS com o veículo novo
-  await p.fill('#f-mec', 'Jeferson'); await p.fill('#f-km', '1250');
+  await p.check('#mec-resp input[value="Jefesson"]'); await p.fill('#f-km', '1250');
   const sv = await p.evaluate(() => DB.get().servicos.find(s => /pastilha/i.test(s.descricao)));
   await p.fill('.itens-tbl tr[data-i="0"] input[data-c=descricao]', sv.descricao);
   await p.waitForTimeout(300);
@@ -64,7 +64,7 @@ const erros = [];
   // 6. bloqueio ao salvar sem veículo
   await p.evaluate(() => location.hash = '#/nova-os');
   await p.waitForSelector('#form-os'); await p.waitForTimeout(200);
-  await p.fill('#f-local', 'Oficina'); await p.fill('#f-mec', 'Jeferson');
+  await p.fill('#f-local', 'Oficina'); await p.check('#mec-resp input[value="Jefesson"]');
   await p.fill('.itens-tbl tr[data-i="0"] input[data-c=descricao]', sv.descricao);
   await p.waitForTimeout(200);
   await p.click('button[type=submit]');

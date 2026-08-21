@@ -134,7 +134,7 @@ const erros = [];
   await m.evaluate(() => location.hash = '#/nova-os');
   await m.waitForTimeout(500);
   await m.fill('#f-veic', 'QMS4G35'); await m.dispatchEvent('#f-veic', 'change');
-  await m.fill('#f-mec', 'Jeferson'); await m.fill('#f-local', 'Oficina');
+  await m.check('#mec-resp input[value="Jefesson"]'); await m.fill('#f-local', 'Oficina');
   const sv = await m.evaluate(() => DB.get().servicos.find(s => /pastilha/i.test(s.descricao)));
   await m.fill('.itens-tbl tr[data-i="0"] input[data-c=descricao]', sv.descricao);
   await m.waitForTimeout(400);

@@ -22,7 +22,7 @@ const erros = [];
   console.log('\n— Cabeçalho —');
   ok('data preenchida automaticamente', !!(await p.inputValue('#f-data')));
   await p.fill('#f-local', 'Oficina Central');
-  await p.fill('#f-mec', 'Jeferson');
+  await p.check('#mec-resp input[value="Jefesson"]');
   await p.fill('#f-condutor', 'Sebastião');
   await p.fill('#f-veic', 'QMS4G35'); await p.dispatchEvent('#f-veic', 'change');
   await p.waitForTimeout(500);
@@ -111,12 +111,12 @@ const erros = [];
   /* --- sem mecânico --- */
   console.log('\n— Sem mecânico —');
   await p.evaluate(() => location.hash = '#/nova-os'); await p.waitForTimeout(700);
-  const bloqueou = await p.evaluate(() => {
-    const f = document.getElementById('form-os');
-    document.getElementById('f-mec').value = '';
-    return !f.checkValidity();          // o navegador barra antes de enviar
-  });
-  ok('formulário inválido sem mecânico', bloqueou);
+  await p.fill('#f-veic', 'QMS4G35'); await p.dispatchEvent('#f-veic', 'change'); await p.waitForTimeout(400);
+  const sv2 = await p.evaluate(() => DB.get().servicos[0]);
+  await p.fill('.itens-tbl tr[data-i="0"] input[data-c=descricao]', sv2.descricao); await p.waitForTimeout(300);
+  // nenhum responsável marcado → salvar deve ser bloqueado por toast
+  await p.click('button[type=submit]'); await p.waitForTimeout(400);
+  ok('bloqueia salvar sem responsável marcado', (await p.textContent('#toasts')).includes('mecânico responsável'));
 
   /* --- tablet --- */
   console.log('\n— Tablet 820×1180 —');

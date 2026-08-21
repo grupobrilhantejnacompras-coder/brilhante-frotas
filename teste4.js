@@ -19,7 +19,7 @@ const erros = [];
 
   // veículo
   await p.fill('#f-veic', 'QMS4G35'); await p.dispatchEvent('#f-veic', 'change');
-  await p.fill('#f-mec', 'Jeferson'); await p.fill('#f-local', 'Oficina');
+  await p.check('#mec-resp input[value="Jefesson"]'); await p.fill('#f-local', 'Oficina');
   await p.waitForTimeout(250);
 
   // 1. digitar a descrição exata do catálogo puxa o valor
