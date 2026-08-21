@@ -36,17 +36,25 @@ Ordem de concatenação e nomes dos módulos: ver `ORDEM` em `build.py`.
 ## Publicar na Vercel
 
 **Endereço oficial:** https://brilhante.vercel.app
-Endereços longos (`brilhante-xxxxx-….vercel.app`) são previews protegidos por login da
-Vercel — não servem para a equipe.
+**Repositório:** `grupobrilhantejnacompras-coder/brilhante-frotas` (privado)
 
-Arraste a pasta **`site`** inteira no projeto `brilhante` da Vercel
-(Deployments → Create Deployment). Nunca crie um projeto novo: o endereço mudaria.
+O projeto `brilhante` da Vercel está ligado a este repositório, branch `main`,
+Framework Preset **Other** (site estático, sem build). Publicar é só isto:
 
-Depois de publicar, confira o número da versão no rodapé da tela de login e em
-*Configurações → Versão publicada*. Se for menor que o do build, é cache: `Ctrl + Shift + R`.
+```
+commit em main  →  Vercel publica sozinha  →  brilhante.vercel.app
+```
 
-O `vercel.json` já manda o navegador revalidar a cada visita, então uma publicação nova
-aparece na próxima atualização da página.
+Não use o v0 e não crie outro projeto na Vercel — o endereço mudaria.
+
+Para atualizar o sistema: gere o build (`python3 build.py`), substitua `index.html`
+no repositório e faça o commit. Em seguida confira o número da versão no rodapé da
+tela de login e em *Configurações → Versão publicada*. Se vier menor, é cache do
+navegador: `Ctrl + Shift + R`. O `vercel.json` já manda revalidar a cada visita e
+mantém `/sistema.html` funcionando (endereço antigo, redirecionado para `/`).
+
+> O repositório é **privado por obrigação**: as senhas dos usuários ficam em texto
+> dentro de `index.html`. Nunca torne este repositório público.
 
 ## Dados
 
@@ -63,6 +71,3 @@ em `src/01_core.js` ajusta a base antiga e só acrescenta o que falta.
 Quando a oficina e o escritório precisarem ver os mesmos dados ao mesmo tempo, trocar o
 `localStorage` por uma API. Todo o acesso a dados passa por um único módulo (`DB`), então
 a troca não mexe nas telas.
-
-
-<!-- Deploy pela Vercel ligado ao GitHub em 21/08/2026. -->
