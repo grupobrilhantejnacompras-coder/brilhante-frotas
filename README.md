@@ -63,3 +63,6 @@ em `src/01_core.js` ajusta a base antiga e só acrescenta o que falta.
 Quando a oficina e o escritório precisarem ver os mesmos dados ao mesmo tempo, trocar o
 `localStorage` por uma API. Todo o acesso a dados passa por um único módulo (`DB`), então
 a troca não mexe nas telas.
+
+
+<!-- Deploy pela Vercel ligado ao GitHub em 21/08/2026. -->
