@@ -246,7 +246,11 @@ const App = {
       const erro = Auth.entrar(f.u.value, f.s.value);
       if (!erro) {
         // Login OK → só então roda a animação de entrada; navegação/render inalterados.
-        App.animarEntrada(() => { location.hash = '#/' + Auth.paginaInicial(); App.render(); });
+        App.animarEntrada(() => {
+          location.hash = '#/' + Auth.paginaInicial(); App.render();
+          // Puxa as O.S. da nuvem em segundo plano e atualiza a tela.
+          if (window.Nuvem) Nuvem.sincronizar().then(m => { if (m) App.render(); }).catch(() => { });
+        });
       }
       else {
         document.getElementById('login-err').innerHTML = `<div class="login-err">${Fmt.esc(erro)}</div>`;
