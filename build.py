@@ -6,7 +6,7 @@ import json, pathlib, datetime, hashlib
 BASE = pathlib.Path(__file__).resolve().parent
 SRC = BASE / 'src'
 ORDEM = ['01_core.js', '02_ui.js', '03_app.js', '04_pages_os.js', '05_filtros.js',
-         '06_painel.js', '07_relatorios.js', '08_importar.js', '08b_exportar.js', '08c_usuarios.js', '09_config.js']
+         '06_painel.js', '07_relatorios.js', '08_importar.js', '08b_exportar.js', '08c_usuarios.js', '09_config.js', '10_supabase.js']
 
 css = (SRC / 'style.css').read_text(encoding='utf-8')
 js = '\n\n'.join((SRC / f).read_text(encoding='utf-8') for f in ORDEM)
