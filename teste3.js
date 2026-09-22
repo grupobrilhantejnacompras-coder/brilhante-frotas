@@ -86,8 +86,10 @@ const erros = [];
   await m.setViewportSize({ width: 390, height: 844 });
   await m.goto('file://' + require('path').resolve(__dirname, 'Sistema_OS_Grupo_Brilhante.html'));
   await m.waitForTimeout(500);
-  if (await m.isVisible('#form-login')) { await m.fill('#u', 'Kamau'); await m.fill('#s', '159753'); await m.click('button[type=submit]'); }
-  await m.waitForTimeout(500);
+  if (await m.isVisible('#form-login')) {
+    await m.fill('#u', 'Kamau'); await m.fill('#s', '159753'); await m.click('button[type=submit]');
+    await m.waitForSelector('#app .nav', { timeout: 8000 });
+  }
   await m.evaluate(() => location.hash = '#/nova-os');
   await m.waitForTimeout(500);
   ok('campo de veículo visível no celular', await m.isVisible('#f-veic'));

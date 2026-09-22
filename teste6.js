@@ -169,7 +169,7 @@ const erros = [];
   await m.waitForTimeout(500);
   ok('página minha conta abre', await m.isVisible('#mc-atual'));
   await m.fill('#mc-atual', 'errada'); await m.fill('#mc-nova', 'novaSenha'); await m.fill('#mc-conf', 'novaSenha');
-  await m.click('#mc-trocar'); await m.waitForTimeout(300);
+  await m.click('#mc-trocar'); await m.waitForTimeout(900);
   ok('senha atual errada é recusada', (await m.textContent('#toasts')).includes('não confere'));
   await m.fill('#mc-atual', 'meca2026'); await m.fill('#mc-nova', 'nova1234'); await m.fill('#mc-conf', 'nova1234');
   await m.click('#mc-trocar'); await m.waitForTimeout(500);

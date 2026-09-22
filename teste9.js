@@ -52,7 +52,8 @@ const erros = [];
   // troca de usuário (simula segundo login) e edita
   await p.evaluate(() => { Auth.sair(); });
   await p.waitForTimeout(300);
-  await p.fill('#u', 'Clayton'); await p.fill('#s', '1234'); await p.click('button[type=submit]'); await p.waitForTimeout(700);
+  await p.fill('#u', 'Clayton'); await p.fill('#s', '1234'); await p.click('button[type=submit]');
+  await p.waitForSelector('#app .nav', { timeout: 8000 });
   await p.evaluate(id => location.hash = '#/nova-os/' + id, o.id); await p.waitForTimeout(700);
   ok('responsáveis vêm marcados ao editar', (await p.$$eval('#mec-resp [data-mec]:checked', e => e.length)) === 2);
   await p.fill('#f-obs', 'Ajuste feito pelo gestor.');

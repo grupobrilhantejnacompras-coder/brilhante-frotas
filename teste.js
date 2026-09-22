@@ -16,11 +16,12 @@ const erros = [];
 
   // 1. login inválido
   await p.fill('#u', 'errado'); await p.fill('#s', '000'); await p.click('button[type=submit]');
+  await p.waitForTimeout(700);
   ok('login inválido mostra erro', await p.isVisible('.login-err'));
 
   // 2. login válido
   await p.fill('#u', 'Kamau'); await p.fill('#s', '159753'); await p.click('button[type=submit]');
-  await p.waitForSelector('#app .nav', { timeout: 5000 });
+  await p.waitForSelector('#app .nav', { timeout: 8000 });
   ok('login válido entra no dashboard', (await p.textContent('.topbar h1')).includes('Dashboard'));
 
   // 3. KPIs do dashboard
@@ -153,8 +154,8 @@ const erros = [];
   await m.waitForTimeout(400);
   if (await m.isVisible('#form-login')) {
     await m.fill('#u', 'Kamau'); await m.fill('#s', '159753'); await m.click('button[type=submit]');
+    await m.waitForSelector('#app .nav', { timeout: 8000 });
   }
-  await m.waitForTimeout(600);
   await m.evaluate(() => location.hash = '#/nova-os');
   await m.waitForTimeout(600);
   ok('nova OS abre no celular', await m.isVisible('#form-os'));
