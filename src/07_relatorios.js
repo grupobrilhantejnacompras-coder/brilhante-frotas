@@ -52,6 +52,8 @@ const Relatorios = (() => {
     const rec = Q.reincidencias(os, b.ordens);
     const total = Q.soma(os);
     const veic = Q.porChave(os, o => o.veiculoId);
+    const grupos = Q.porGrupoServico(os);
+    const porLocal = Q.porChave(os, o => o.local);
 
     if (!os.length) return `<div class="report">${cabecalho('Relatório semanal de manutenção de frotas')}
       ${UI.vazio('Nenhuma OS no período', 'Não há ordens de serviço registradas entre ' + Fmt.date(st.de) + ' e ' + Fmt.date(st.ate) + '.')}</div>`;
@@ -77,6 +79,14 @@ const Relatorios = (() => {
         .map(([l, v]) => `<div class="rep-kpi"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('')}
         </div></div>
 
+      ${(grupos.length || porLocal.length) ? `<div class="rep-sec"><h2>Panorama do período</h2>
+        <div class="donut-row">
+          <div>${Chart.donut(grupos.map(g => ({ rotulo: g.nome, valor: g.valor })), { aria: 'Gastos por sistema do veículo' })}
+            <p class="dim ta-c" style="font-size:11.5px;margin-top:2px">Gastos por sistema do veículo</p></div>
+          <div>${Chart.donut(porLocal.map(e => ({ rotulo: e.chave, valor: e.valor })), { aria: 'Gastos por local' })}
+            <p class="dim ta-c" style="font-size:11.5px;margin-top:2px">Gastos por local / unidade</p></div>
+        </div></div>` : ''}
+
       <div class="rep-sec"><h2>Serviços realizados</h2>
         ${UI.tabela([{ t: 'Data', k: 'd' }, { t: 'Veículo', k: 'v' }, { t: 'Placa', k: 'pl' }, { t: 'Frota', k: 'fr' },
         { t: 'KM/H', k: 'km', cls: 'ta-r' }, { t: 'Mecânico', k: 'me' }, { t: 'Serviço', k: 's' },
@@ -93,6 +103,7 @@ const Relatorios = (() => {
       }), { total: { v: 'TOTAL', n: Fmt.num(os.length), t: Fmt.money(total) } })}</div>
 
       <div class="rep-sec"><h2>Reincidências</h2>
+        ${rec.length ? `<div class="rep-flag"><strong>${rec.length} ${rec.length === 1 ? 'veículo retornou' : 'veículos retornaram'}</strong> pelo mesmo sistema dentro da janela de reincidência — atenção redobrada nesses itens.</div>` : ''}
         ${rec.length ? UI.tabela([{ t: 'Veículo', k: 'v' }, { t: 'Placa', k: 'p' }, { t: 'Frota', k: 'f' }, { t: 'Problema', k: 'g' },
         { t: 'Data anterior', k: 'd1' }, { t: 'Serviço anterior', k: 's1' }, { t: 'Data atual', k: 'd2' }, { t: 'Serviço atual', k: 's2' },
         { t: 'Intervalo', k: 'i', cls: 'ta-r' }, { t: 'Valor gasto', k: 't', cls: 'ta-r' }],
@@ -125,6 +136,7 @@ const Relatorios = (() => {
     const porVeic = Q.porChave(os, o => o.veiculoId);
     const porLocal = Q.porChave(os, o => o.local);
     const grupos = Q.porGrupoServico(os);
+    const semanas = Q.porSemana(os);
     const alrt = Painel.alertas(os, b.ordens);
     const servMais = {};
     os.forEach(o => o.itens.forEach(i => { const g = Rec.grupoDe(i.descricao).nome; servMais[g] = (servMais[g] || 0) + (i.qtd || 1); }));
@@ -138,11 +150,17 @@ const Relatorios = (() => {
         <div class="rep-kpis">
           <div class="rep-kpi"><div class="l">Valor total</div><div class="v">${Fmt.money0(total)}</div></div>
           <div class="rep-kpi"><div class="l">Período anterior</div><div class="v">${Fmt.money0(totalAnt)}</div></div>
-          <div class="rep-kpi"><div class="l">Variação</div><div class="v" style="color:${varia == null ? 'inherit' : varia > 0 ? 'var(--red)' : 'var(--green)'}">${varia == null ? '—' : (varia > 0 ? '+' : '') + Fmt.num1(varia) + '%'}</div></div>
+          <div class="rep-kpi"><div class="l">Variação</div><div class="v" style="color:${varia == null ? 'inherit' : varia > 0 ? 'var(--red)' : 'var(--green)'}">${varia == null ? '—' : (varia > 0 ? '▲ +' : '▼ ') + Fmt.num1(Math.abs(varia)) + '%'}</div></div>
           <div class="rep-kpi"><div class="l">OS realizadas</div><div class="v">${Fmt.num(os.length)}</div></div>
           <div class="rep-kpi"><div class="l">Custo médio por OS</div><div class="v">${Fmt.money0(total / os.length)}</div></div>
           <div class="rep-kpi"><div class="l">Reincidências</div><div class="v">${Fmt.num(rec.length)}</div></div>
         </div></div>
+
+      ${semanas.length > 1 ? `<div class="rep-sec"><h2>Evolução no período</h2>
+        ${Chart.area(semanas.map(s2 => ({
+      rotulo: Fmt.dateShort(s2.chave), valor: s2.valor,
+      tip: `<strong>Semana de ${Fmt.date(s2.chave)}</strong><br>${Fmt.money(s2.valor)}<br>${s2.qtd} ordens de serviço`
+    })), { aria: 'Evolução dos gastos por semana' })}</div>` : ''}
 
       <div class="rep-sec"><h2>Onde gastamos</h2>
         <div class="grid g2">

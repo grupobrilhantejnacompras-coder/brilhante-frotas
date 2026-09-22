@@ -86,10 +86,10 @@ const Painel = (() => {
       </div></div></section>` : '';
 
     const gEvolucao = UI.card('Serviços por período', semanas.length
-      ? Chart.area(semanas.map(s => ({
+      ? Chart.equalizador(semanas.map(s => ({
         rotulo: Fmt.dateShort(s.chave), valor: s.valor,
         tip: `<strong>Semana de ${Fmt.date(s.chave)}</strong><br>${Fmt.money(s.valor)}<br>${s.qtd} ordens de serviço`
-      })), { aria: 'Valor de serviços por semana' })
+      })), { aria: 'Valor de serviços por semana', cor: Chart.CIANO })
       : UI.vazio('Sem movimento', 'Nenhuma OS com data no período filtrado.'));
 
     const gVeiculos = UI.card('Gastos por veículo', Chart.barsH(porVeic.slice(0, 10).map(e => {
@@ -103,12 +103,12 @@ const Painel = (() => {
     }), { aria: 'Gastos por veículo' }) + '<div class="legend"><span><i style="background:#C2721A"></i>com reincidência</span><span><i style="background:#3157CE"></i>sem reincidência</span></div>');
 
     const gServicos = UI.card('Gastos por tipo de serviço', Chart.barsH(grupos.slice(0, 10).map(g => ({
-      rotulo: g.nome, valor: g.valor,
+      rotulo: g.nome, valor: g.valor, cor: Chart.corCiano(g.nome),
       tip: `<strong>${Fmt.esc(g.nome)}</strong><br>${Fmt.money(g.valor)}<br>${g.qtd} serviços executados`
     })), { aria: 'Gastos por tipo de serviço' }));
 
     const gMecanicos = UI.card('Serviços por mecânico', Chart.barsV(porMec.map(m => ({
-      rotulo: m.chave, valor: m.qtd,
+      rotulo: m.chave, valor: m.qtd, cor: Chart.corCiano(m.chave),
       tip: `<strong>${Fmt.esc(m.chave)}</strong><br>${m.qtd} OS · ${Fmt.money(m.valor)}<br>${m.veic.size} veículos atendidos`
     })), { fmt: Fmt.num, aria: 'Ordens de serviço por mecânico' }));
 

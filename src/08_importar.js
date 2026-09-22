@@ -303,7 +303,7 @@ const Importar = (() => {
     inp.type = 'file'; inp.accept = '.xlsx';
     inp.addEventListener('change', async () => {
       const f = inp.files[0]; if (!f) return;
-      UI.toast('Lendo a planilha…');
+      UI.toast('Lendo a planilha…', 'load');
       try { previa(await processar(f), f.name); }
       catch (e) { console.error(e); UI.toast('Não foi possível ler a planilha: ' + e.message, 'err'); }
     });

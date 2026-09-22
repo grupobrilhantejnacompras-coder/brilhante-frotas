@@ -85,16 +85,16 @@ textarea.input{min-height:88px; resize:vertical}
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
   padding:10px 16px; border-radius:8px; border:1px solid transparent; background:var(--royal);
-  color:#fff; font-weight:600; cursor:pointer; transition:background .15s, transform .05s, box-shadow .15s;
+  color:#fff; font-weight:600; cursor:pointer; transition:background .15s, transform .12s, box-shadow .15s;
   white-space:nowrap;
 }
-.btn:hover{background:var(--royal-700)}
+.btn:hover{background:var(--royal-700); transform:translateY(-1px); box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 22px rgba(22,119,255,.32)}
 .btn:active{transform:translateY(1px)}
 .btn.block{width:100%}
 .btn.ghost{background:transparent; color:var(--ink-2); border-color:var(--line-2)}
 .btn{box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 6px 16px rgba(22,119,255,.22)}
 .btn.ghost{box-shadow:none}
-.btn.ghost:hover{background:rgba(255,255,255,.05); border-color:var(--royal); color:var(--ink)}
+.btn.ghost:hover{background:rgba(255,255,255,.05); border-color:var(--royal); color:var(--ink); transform:translateY(-1px); box-shadow:none}
 .btn.sm{padding:6px 11px; font-size:12.5px; border-radius:7px}
 .btn.danger{background:var(--red)} .btn.danger:hover{background:#96170F}
 .btn[disabled]{opacity:.5; cursor:not-allowed}
@@ -150,6 +150,19 @@ textarea.input{min-height:88px; resize:vertical}
 /* --------------------------------------------------- cards / grids */
 .card{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 40%), var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); transition:border-color .18s, box-shadow .18s}
 .card:hover{border-color:var(--line-2)}
+
+/* entrada suave do conteúdo — troca de tela e reaplicação de filtros */
+.fx-in{animation:fxIn .4s cubic-bezier(.16,1,.3,1) both}
+@keyframes fxIn{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+/* KPIs entram em cascata, um pouco depois um do outro */
+.grid.kpis > .kpi{animation:fxIn .45s cubic-bezier(.16,1,.3,1) both}
+.grid.kpis > .kpi:nth-child(1){animation-delay:.02s}
+.grid.kpis > .kpi:nth-child(2){animation-delay:.07s}
+.grid.kpis > .kpi:nth-child(3){animation-delay:.12s}
+.grid.kpis > .kpi:nth-child(4){animation-delay:.17s}
+.grid.kpis > .kpi:nth-child(5){animation-delay:.22s}
+.grid.kpis > .kpi:nth-child(6){animation-delay:.27s}
+.grid.kpis > .kpi:nth-child(n+7){animation-delay:.30s}
 .card-h{display:flex; align-items:center; gap:var(--s3); padding:14px var(--s4); border-bottom:1px solid var(--line)}
 .card-h h2{flex:1; min-width:0}
 .card-b{padding:var(--s4)}
@@ -163,8 +176,8 @@ textarea.input{min-height:88px; resize:vertical}
 
 /* KPI com faceta no canto (eco do diamante) */
 .kpi{position:relative; overflow:hidden; padding:var(--s4)}
-.kpi{transition:border-color .18s, box-shadow .18s}
-.kpi:hover{border-color:var(--royal); box-shadow:var(--glow)}
+.kpi{transition:border-color .18s, box-shadow .18s, transform .18s}
+.kpi:hover{border-color:var(--royal); box-shadow:var(--glow); transform:translateY(-3px)}
 .kpi::after{
   content:""; position:absolute; top:-16px; right:-16px; width:34px; height:34px;
   background:var(--royal-50); transform:rotate(45deg);
@@ -264,20 +277,49 @@ tbody tr.clickable{cursor:pointer} tbody tr.clickable:hover{background:var(--roy
 .chart text{font-family:var(--sans); font-size:11px; fill:var(--ink-2)}
 .chart .lbl-v{fill:var(--ink); font-weight:600}
 .chart .gl{stroke:var(--line); stroke-width:1}
-.bar{transition:opacity .13s} .bar:hover{opacity:.82}
+.bar{transition:opacity .13s, filter .13s} .bar:hover{opacity:1; filter:brightness(1.14)}
 .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin-top:10px}
 .legend i{width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:5px}
 
+/* barras crescem do zero até o valor real; linha é desenhada; pontos aparecem em cascata */
+.chart .bar{transform-box:fill-box; transition:transform .8s cubic-bezier(.16,1,.3,1), opacity .13s, filter .13s;
+  filter:drop-shadow(0 0 4px currentColor)}
+.chart .bar:hover{filter:brightness(1.18) drop-shadow(0 0 8px currentColor)}
+.chart .bar.fx-h{transform-origin:0% 50%}
+.chart .bar.fx-v{transform-origin:50% 100%}
+.chart .area-fx{opacity:0; animation:areaIn 1s ease .25s both}
+@keyframes areaIn{to{opacity:1}}
+.chart .linha-fx{filter:drop-shadow(0 0 5px currentColor)}
+.chart .dot-fx{opacity:0; transform-box:fill-box; transform-origin:center; animation:dotIn .45s cubic-bezier(.34,1.56,.64,1) both;
+  filter:drop-shadow(0 0 4px currentColor)}
+@keyframes dotIn{from{opacity:0; transform:scale(0)}to{opacity:1; transform:scale(1)}}
+
+/* gráfico "equalizador" — muitas colunas finas, brilho mais forte, ponto pulsante no período atual */
+.chart .eq-bar{filter:drop-shadow(0 0 6px currentColor)}
+.chart .eq-bar:hover{filter:brightness(1.3) drop-shadow(0 0 12px currentColor)}
+.chart .eq-live{transform-box:fill-box; transform-origin:center; filter:drop-shadow(0 0 6px currentColor);
+  animation:eqPulse 1.6s ease-in-out infinite}
+@keyframes eqPulse{0%,100%{opacity:.55; transform:scale(1)}50%{opacity:1; transform:scale(1.4)}}
+
+/* o brilho é um efeito do painel escuro — no papel branco do relatório (impressão/PDF) fica limpo, sem glow */
+.report .chart .bar,.report .chart .bar:hover,.report .chart .linha-fx,.report .chart .dot-fx,.report .chart .donut-fx,
+.report .chart .eq-bar,.report .chart .eq-bar:hover,.report .chart .eq-live{filter:none; animation:none}
+
 /* --------------------------------------------------- modal / toast */
-.modal-bg{position:fixed; inset:0; background:rgba(2,7,15,.68); backdrop-filter:blur(3px); display:grid; place-items:center; padding:var(--s4); z-index:100}
-.modal{background:var(--surface); border-radius:var(--r-lg); width:100%; max-width:720px; max-height:88vh; display:flex; flex-direction:column; box-shadow:var(--shadow-lg)}
+.modal-bg{position:fixed; inset:0; background:rgba(2,7,15,.68); backdrop-filter:blur(3px); display:grid; place-items:center; padding:var(--s4); z-index:100; animation:modalBgIn .18s ease both}
+@keyframes modalBgIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface); border-radius:var(--r-lg); width:100%; max-width:720px; max-height:88vh; display:flex; flex-direction:column; box-shadow:var(--shadow-lg); animation:modalIn .24s cubic-bezier(.16,1,.3,1) both}
+@keyframes modalIn{from{opacity:0; transform:translateY(10px) scale(.97)}to{opacity:1; transform:none}}
 .modal-h{display:flex; align-items:center; gap:var(--s3); padding:var(--s4) var(--s5); border-bottom:1px solid var(--line)}
 .modal-b{padding:var(--s5); overflow:auto}
 .modal-f{padding:var(--s4) var(--s5); border-top:1px solid var(--line); display:flex; gap:var(--s2); justify-content:flex-end}
 #toasts{position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:8px; z-index:200}
-.toast{background:var(--surface); color:var(--ink); border:1px solid var(--line-2); padding:11px 16px; border-radius:9px; box-shadow:var(--shadow-lg); font-size:13px; animation:tin .2s ease-out}
+.toast{background:var(--surface); color:var(--ink); border:1px solid var(--line-2); padding:11px 16px; border-radius:9px; box-shadow:var(--shadow-lg); font-size:13px; animation:tin .2s ease-out; display:flex; align-items:center}
 .toast.ok{border-color:var(--green); color:var(--green)} .toast.warn{border-color:var(--amber); color:var(--amber)} .toast.err{border-color:var(--red); color:var(--red)}
 @keyframes tin{from{opacity:0; transform:translateY(8px)}to{opacity:1;transform:none}}
+.toast.load::before{content:""; width:12px; height:12px; margin-right:9px; border-radius:50%; flex:none;
+  border:2px solid var(--line-2); border-top-color:var(--royal); animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* --------------------------------------------------- vazio */
 .empty{text-align:center; padding:var(--s7) var(--s4); color:var(--muted)}
@@ -301,9 +343,29 @@ tbody tr.clickable{cursor:pointer} tbody tr.clickable:hover{background:var(--roy
 .rep-sec > h2{display:flex; align-items:center; gap:9px; margin-bottom:var(--s3); font-size:14px}
 .rep-sec > h2::before{content:""; width:8px; height:8px; background:var(--royal); transform:rotate(45deg); border-radius:1px; flex:none}
 .rep-kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:var(--s3)}
-.rep-kpi{border:1px solid var(--line); border-radius:9px; padding:var(--s3) var(--s4); background:#F8FAFC}
+.rep-kpi{border:1px solid var(--line); border-left:3px solid var(--royal); border-radius:9px; padding:var(--s3) var(--s4); background:#F8FAFC;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
+.rep-kpi:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(15,23,42,.10); border-color:#CBD5E1}
 .rep-kpi .l{font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600}
 .rep-kpi .v{font-size:21px; font-weight:800; margin-top:3px}
+
+/* gráficos legíveis dentro do papel branco do relatório (o app é escuro por padrão) */
+.report .chart text{fill:#64748B}
+.report .chart .lbl-v{fill:#0F172A}
+.report .chart .gl{stroke:#E2E8F0}
+.report .tot-row td{background:#EEF2FF; color:#0F172A; border-top:2px solid var(--royal)}
+
+/* destaque de atenção dentro do relatório (ex.: reincidências) */
+.rep-flag{border-left:3px solid var(--amber); background:#FFFBEB; color:#78350F; border-radius:8px; padding:10px 14px; margin-bottom:var(--s3); font-size:13px}
+.rep-flag strong{color:#92400E}
+
+/* rosca (donut) de composição */
+.donut-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:var(--s5)}
+.donut-wrap{display:flex; flex-direction:column; align-items:center; gap:10px; padding:4px 0}
+.chart.donut{width:184px; height:184px; max-height:184px; overflow:visible; flex:none}
+.chart .donut-fx{transition:stroke-width .15s ease}
+.chart .donut-fx:hover{stroke-width:31}
+.donut-wrap .legend{justify-content:center; text-align:left}
 
 @media print{
   :root{color-scheme:light; --ink:#0F172A; --ink-2:#1E293B; --muted:#64748B; --muted-2:#94A3B8;
@@ -318,6 +380,9 @@ tbody tr.clickable{cursor:pointer} tbody tr.clickable:hover{background:var(--roy
   table{font-size:10.5px} td,th{padding:5px 7px}
   .rep-sec{page-break-inside:avoid}
   @page{margin:14mm}
+  /* impressão nunca deve pegar o gráfico/KPI em meio à animação de entrada */
+  .fx-in,.kpi,.chart .bar,.chart .area-fx,.chart .dot-fx{animation:none !important; opacity:1 !important; transform:none !important}
+  .chart .linha-fx,.chart .donut-fx{stroke-dashoffset:0 !important; transition:none !important}
 }
 
 /* --------------------------------------------------- responsivo */
