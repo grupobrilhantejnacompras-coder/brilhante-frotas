@@ -22,7 +22,7 @@ const erros = [];
   console.log('— Mecânicos responsáveis —');
   const nomes = await p.$$eval('#mec-resp [data-mec]', e => e.map(x => x.value));
   console.log('   opções:', nomes.join(', '));
-  ok('cinco nomes exatos', JSON.stringify(nomes) === JSON.stringify(['Jefesson', 'Allan', 'Gemerson', 'Vandame', 'Tião']));
+  ok('seis nomes exatos', JSON.stringify(nomes) === JSON.stringify(['Jefesson', 'Allan', 'Gemerson', 'Vandame', 'Tião', 'Oficina Safra']));
 
   // não salva sem responsável
   const sv = await p.evaluate(() => DB.get().servicos.find(s => /pastilha/i.test(s.descricao)));
