@@ -13,6 +13,11 @@ const Usuarios = (() => {
   function pagina() {
     App.aoRenderizar = ligar;
     App.acoesTopo(`<button class="btn sm" id="novo-usuario">+ Novo usuário</button>`);
+    // Atualiza a lista com o que estiver na nuvem (outros computadores podem
+    // ter criado/editado usuários desde a última vez que este abriu aqui).
+    if (window.Nuvem && Estado.pagina === 'usuarios') {
+      Nuvem.sincronizarUsuarios().then(mudou => { if (mudou && Estado.pagina === 'usuarios') App.render(); }).catch(() => { });
+    }
     return `<div class="stack">
       ${UI.card('', `<div class="row">
         <input class="input" id="u-busca" placeholder="Buscar por nome ou usuário…" style="max-width:280px" value="${Fmt.esc(busca)}">
@@ -137,6 +142,9 @@ const Usuarios = (() => {
       u.permissoes = [...document.querySelectorAll('#uu-perms [data-perm]:checked')].map(c => c.dataset.perm);
       if (u.perfil === 'Administrador') u.permissoes = Perm.TODAS.slice();
 
+      // Sinaliza pra nuvem se a senha mudou agora ou se é pra manter a atual
+      // (campo em branco numa edição não deve sobrescrever a senha lá).
+      u._novaSenhaPlana = senha || null;
       DB.salvarUsuario(u);
       UI.fecharModal();
       UI.toast(orig ? 'Usuário atualizado.' : 'Usuário cadastrado.', 'ok');
@@ -165,15 +173,21 @@ const Usuarios = (() => {
       $('mc-salvar').addEventListener('click', () => {
         const nome = $('mc-nome').value.trim();
         if (!nome) { UI.toast('Informe seu nome.', 'warn'); return; }
-        u.nome = nome; DB.salvarUsuario(u); Auth.aplicar(u);
+        u.nome = nome; u._novaSenhaPlana = null; DB.salvarUsuario(u); Auth.aplicar(u);
         UI.toast('Dados atualizados.', 'ok'); App.render();
       });
-      $('mc-trocar').addEventListener('click', () => {
+      $('mc-trocar').addEventListener('click', async () => {
         const atual = $('mc-atual').value, nova = $('mc-nova').value, conf = $('mc-conf').value;
-        if (String(atual) !== String(u.senha)) { UI.toast('A senha atual não confere.', 'warn'); $('mc-atual').focus(); return; }
         if (nova.length < 4) { UI.toast('A nova senha precisa de pelo menos 4 caracteres.', 'warn'); return; }
         if (nova !== conf) { UI.toast('A confirmação não confere com a nova senha.', 'warn'); return; }
-        u.senha = nova; DB.salvarUsuario(u);
+        const btn = $('mc-trocar'); btn.disabled = true;
+        let confere = String(atual) === String(u.senha); // reserva local (offline)
+        if (window.Nuvem) {
+          try { confere = !!(await Nuvem.verificarLoginNuvem(u.usuario, atual)); } catch (e) { /* mantém a checagem local */ }
+        }
+        btn.disabled = false;
+        if (!confere) { UI.toast('A senha atual não confere.', 'warn'); $('mc-atual').focus(); return; }
+        u.senha = nova; u._novaSenhaPlana = nova; DB.salvarUsuario(u);
         $('mc-atual').value = $('mc-nova').value = $('mc-conf').value = '';
         UI.toast('Senha alterada.', 'ok');
       });

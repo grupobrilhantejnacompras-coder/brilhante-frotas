@@ -33,8 +33,27 @@ const VERSAO = window.APP_VERSAO || { n: '0', data: '' };
 
 /* ---------- Autenticação ---------- */
 const Auth = {
-  /** Retorna null em caso de sucesso, ou a mensagem do que impediu a entrada. */
-  entrar(login, senha) {
+  /** Retorna null em caso de sucesso, ou a mensagem do que impediu a entrada.
+   *  Confere direto na nuvem (fonte da verdade) sempre que possível, pra uma
+   *  troca de senha feita em qualquer computador valer em todos. Sem internet
+   *  ou com o Supabase fora do ar, cai pra reserva local (último dado salvo
+   *  neste aparelho). */
+  async entrar(login, senha) {
+    if (window.Nuvem) {
+      try {
+        const uNuvem = await Nuvem.verificarLoginNuvem(login, senha);
+        if (!uNuvem) return 'Usuário ou senha incorretos. Verifique e tente novamente.';
+        if (uNuvem.status !== 'Ativo') return 'Este usuário está inativo. Procure o administrador do sistema.';
+        const b = DB.get();
+        const i = (b.usuarios || []).findIndex(x => x.id === uNuvem.id);
+        const mesclado = { ...(i >= 0 ? b.usuarios[i] : {}), ...uNuvem };
+        if (i >= 0) b.usuarios[i] = mesclado; else (b.usuarios = b.usuarios || []).push(mesclado);
+        DB.save();
+        Auth.aplicar(mesclado);
+        try { sessionStorage.setItem('brilhante_sessao', mesclado.id); } catch (e) { }
+        return null;
+      } catch (e) { /* sem rede/Supabase fora do ar: segue pra reserva local abaixo */ }
+    }
     const u = DB.usuarioPorLogin(login);
     if (!u || String(u.senha).trim() !== String(senha).trim()) return 'Usuário ou senha incorretos. Verifique e tente novamente.';
     if (u.status !== 'Ativo') return 'Este usuário está inativo. Procure o administrador do sistema.';
@@ -244,15 +263,27 @@ const App = {
 
   ligarLogin() {
     const f = document.getElementById('form-login');
-    f.addEventListener('submit', e => {
+    f.addEventListener('submit', async e => {
       e.preventDefault();
-      const erro = Auth.entrar(f.u.value, f.s.value);
+      const btn = f.querySelector('button[type=submit]');
+      const rotuloOriginal = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Entrando…'; }
+      let erro;
+      try { erro = await Auth.entrar(f.u.value, f.s.value); }
+      finally { if (btn) { btn.disabled = false; btn.textContent = rotuloOriginal; } }
+      // Se enquanto esperava a resposta a tela de login já saiu do ar (outra
+      // tentativa terminou primeiro e entrou), essa resposta atrasada não
+      // mexe mais em nada.
+      if (document.getElementById('form-login') !== f) return;
       if (!erro) {
         // Login OK → só então roda a animação de entrada; navegação/render inalterados.
         App.animarEntrada(() => {
           location.hash = '#/' + Auth.paginaInicial(); App.render();
-          // Puxa as O.S. da nuvem em segundo plano e atualiza a tela.
-          if (window.Nuvem) Nuvem.sincronizar().then(m => { if (m) App.render(); }).catch(() => { });
+          // Puxa as O.S. e os usuários da nuvem em segundo plano e atualiza a tela.
+          if (window.Nuvem) {
+            Nuvem.sincronizar().then(m => { if (m) App.render(); }).catch(() => { });
+            Nuvem.sincronizarUsuarios().then(m => { if (m) App.render(); }).catch(() => { });
+          }
         });
       }
       else {
