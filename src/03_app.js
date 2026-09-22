@@ -36,7 +36,7 @@ const Auth = {
   /** Retorna null em caso de sucesso, ou a mensagem do que impediu a entrada. */
   entrar(login, senha) {
     const u = DB.usuarioPorLogin(login);
-    if (!u || String(u.senha) !== String(senha)) return 'Usuário ou senha incorretos. Verifique e tente novamente.';
+    if (!u || String(u.senha).trim() !== String(senha).trim()) return 'Usuário ou senha incorretos. Verifique e tente novamente.';
     if (u.status !== 'Ativo') return 'Este usuário está inativo. Procure o administrador do sistema.';
     u.ultimoAcesso = Dt.today();
     DB.save();
@@ -233,7 +233,10 @@ const App = {
       <div class="field"><label for="u">Usuário</label>
         <input class="input" id="u" name="u" autocomplete="username" autocapitalize="none" required></div>
       <div class="field"><label for="s">Senha</label>
-        <input class="input" id="s" name="s" type="password" autocomplete="current-password" required></div>
+        <div class="senha-wrap">
+          <input class="input" id="s" name="s" type="password" autocomplete="current-password" required>
+          <button type="button" class="senha-olho" id="senha-olho" tabindex="-1" aria-label="Mostrar senha">Mostrar</button>
+        </div></div>
       <button class="btn block" type="submit">Entrar</button>
       <div class="login-foot">Juína · Mato Grosso <span class="versao">Developed by Kamau Rocha · v${VERSAO.n} · ${VERSAO.data}</span></div>
     </form></div>`;
@@ -258,6 +261,13 @@ const App = {
       }
     });
     setTimeout(() => { const u = document.getElementById('u'); if (u) u.focus(); }, 60);
+    const olho = document.getElementById('senha-olho');
+    if (olho) olho.addEventListener('click', () => {
+      const campo = f.s;
+      const mostrando = campo.type === 'text';
+      campo.type = mostrando ? 'password' : 'text';
+      olho.textContent = mostrando ? 'Mostrar' : 'Ocultar';
+    });
   },
 
   /** Cortina cinematográfica logo→sistema. Só é chamada após login válido. */

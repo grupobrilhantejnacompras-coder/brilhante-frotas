@@ -78,6 +78,14 @@ button,input,select,textarea{font:inherit; color:inherit}
   background:var(--surface-2); transition:border-color .15s, box-shadow .15s;
 }
 .input:focus{outline:none; border-color:var(--royal); box-shadow:0 0 0 3px var(--royal-100)}
+.senha-wrap{position:relative}
+.senha-wrap .input{padding-right:64px}
+.senha-olho{
+  position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  background:none; border:none; color:var(--royal-300); font-size:12px; font-weight:600;
+  cursor:pointer; padding:4px 6px;
+}
+.senha-olho:hover{color:var(--royal)}
 .input[readonly]{background:var(--surface-2); color:var(--muted)}
 .input.pendente{border-color:var(--amber-line); background:rgba(255,176,32,.07)}
 .input.pendente:focus{border-color:var(--royal); background:var(--surface)}
