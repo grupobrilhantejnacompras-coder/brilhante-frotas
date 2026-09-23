@@ -141,6 +141,13 @@ const Usuarios = (() => {
       if (senha) u.senha = senha;
       u.permissoes = [...document.querySelectorAll('#uu-perms [data-perm]:checked')].map(c => c.dataset.perm);
       if (u.perfil === 'Administrador') u.permissoes = Perm.TODAS.slice();
+      else if (!u.permissoes.length) {
+        // Sem isso, dava pra salvar um usuário sem nenhuma permissão marcada
+        // e ele cair direto em "Acesso restrito" ao entrar — mesmo efeito do
+        // bug da sincronização, só que causado aqui na tela em vez da nuvem.
+        UI.toast('Marque ao menos uma permissão — sem nenhuma, o usuário não consegue acessar nada no sistema.', 'warn');
+        return;
+      }
 
       // Sinaliza pra nuvem se a senha mudou agora ou se é pra manter a atual
       // (campo em branco numa edição não deve sobrescrever a senha lá).

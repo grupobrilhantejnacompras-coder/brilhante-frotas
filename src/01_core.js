@@ -213,10 +213,13 @@ const DB = (() => {
     // com a lista vazia por causa de uma sincronização com a nuvem que ainda
     // não tinha as permissões preenchidas do lado de lá (semente da v6.0) —
     // sem isso, o usuário perde acesso a tudo sem nenhum aviso, mesmo
-    // conseguindo entrar normalmente.
+    // conseguindo entrar normalmente. Vale pra qualquer perfil, inclusive
+    // Administrador: mesmo o acesso dele não dependendo desta lista (tem bypass
+    // em Perm.pode), a ficha salva fica consistente com o que ele realmente
+    // tem, em vez de aparecer "0 de N" na tela de Usuários.
     let corrigiuPermVazia = false;
     d.usuarios.forEach(u => {
-      if (u.perfil !== 'Administrador' && (!Array.isArray(u.permissoes) || !u.permissoes.length)) {
+      if (!Array.isArray(u.permissoes) || !u.permissoes.length) {
         u.permissoes = Perm.doPerfil(u.perfil);
         corrigiuPermVazia = true;
       }
