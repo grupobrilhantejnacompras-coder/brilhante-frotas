@@ -39,19 +39,25 @@ const Auth = {
    *  ou com o Supabase fora do ar, cai pra reserva local (último dado salvo
    *  neste aparelho). */
   async entrar(login, senha) {
+    let curarNuvem = false;
     if (window.Nuvem) {
       try {
         const uNuvem = await Nuvem.verificarLoginNuvem(login, senha);
-        if (!uNuvem) return 'Usuário ou senha incorretos. Verifique e tente novamente.';
-        if (uNuvem.status !== 'Ativo') return 'Este usuário está inativo. Procure o administrador do sistema.';
-        const b = DB.get();
-        const i = (b.usuarios || []).findIndex(x => x.id === uNuvem.id);
-        const mesclado = { ...(i >= 0 ? b.usuarios[i] : {}), ...uNuvem };
-        if (i >= 0) b.usuarios[i] = mesclado; else (b.usuarios = b.usuarios || []).push(mesclado);
-        DB.save();
-        Auth.aplicar(mesclado);
-        try { sessionStorage.setItem('brilhante_sessao', mesclado.id); } catch (e) { }
-        return null;
+        if (uNuvem) {
+          if (uNuvem.status !== 'Ativo') return 'Este usuário está inativo. Procure o administrador do sistema.';
+          const b = DB.get();
+          const i = (b.usuarios || []).findIndex(x => x.id === uNuvem.id);
+          const mesclado = { ...(i >= 0 ? b.usuarios[i] : {}), ...uNuvem };
+          if (i >= 0) b.usuarios[i] = mesclado; else (b.usuarios = b.usuarios || []).push(mesclado);
+          DB.save();
+          Auth.aplicar(mesclado);
+          try { sessionStorage.setItem('brilhante_sessao', mesclado.id); } catch (e) { }
+          return null;
+        }
+        // A nuvem respondeu (sem sair do ar) mas não bateu usuário/senha. Antes
+        // de recusar de vez, confere a reserva local: pode ser uma senha trocada
+        // antes desta sincronização existir e que nunca chegou a subir pro banco.
+        curarNuvem = true;
       } catch (e) { /* sem rede/Supabase fora do ar: segue pra reserva local abaixo */ }
     }
     const u = DB.usuarioPorLogin(login);
@@ -61,6 +67,11 @@ const Auth = {
     DB.save();
     Auth.aplicar(u);
     try { sessionStorage.setItem('brilhante_sessao', u.id); } catch (e) { }
+    if (curarNuvem && window.Nuvem) {
+      // bateu local mas não na nuvem: sobe a senha atual pra nuvem agora, sem
+      // travar a entrada, pra corrigir a divergência e não cair de novo.
+      try { Nuvem.salvarUsuarioNuvem(u, u.senha).catch(() => { }); } catch (e) { }
+    }
     return null;
   },
   aplicar(u) {
