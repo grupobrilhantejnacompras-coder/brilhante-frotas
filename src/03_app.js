@@ -62,7 +62,16 @@ const Auth = {
           if (uNuvem.status !== 'Ativo') return 'Este usuário está inativo. Procure o administrador do sistema.';
           const b = DB.get();
           const i = (b.usuarios || []).findIndex(x => x.id === uNuvem.id);
-          const mesclado = { ...(i >= 0 ? b.usuarios[i] : {}), ...uNuvem };
+          const local = i >= 0 ? b.usuarios[i] : {};
+          // Se a nuvem não trouxer permissões (ficha antiga, ainda sem essa
+          // coluna preenchida do lado de lá), não deixa isso apagar o que já
+          // existe neste aparelho — mantém o local, ou o padrão do perfil.
+          const permissoesNuvemVazias = !Array.isArray(uNuvem.permissoes) || !uNuvem.permissoes.length;
+          const mesclado = { ...local, ...uNuvem };
+          if (permissoesNuvemVazias) {
+            mesclado.permissoes = (Array.isArray(local.permissoes) && local.permissoes.length)
+              ? local.permissoes : Perm.doPerfil(uNuvem.perfil);
+          }
           if (i >= 0) b.usuarios[i] = mesclado; else (b.usuarios = b.usuarios || []).push(mesclado);
           DB.save();
           Auth.aplicar(mesclado);
@@ -74,9 +83,13 @@ const Auth = {
     return 'Usuário ou senha incorretos. Verifique e tente novamente.';
   },
   aplicar(u) {
+    // u.permissoes vazio ([]) também precisa cair pro padrão do perfil — não
+    // só undefined/null — senão um registro que veio de uma sincronização
+    // sem essa informação preenchida trava o usuário sem acesso a nada.
+    const semPermissoes = !Array.isArray(u.permissoes) || !u.permissoes.length;
     Estado.usuario = {
       id: u.id, nome: u.nome || u.usuario, usuario: u.usuario, perfil: u.perfil,
-      permissoes: u.permissoes || Perm.doPerfil(u.perfil), setor: u.setor || ''
+      permissoes: semPermissoes ? Perm.doPerfil(u.perfil) : u.permissoes, setor: u.setor || ''
     };
   },
   sair() {

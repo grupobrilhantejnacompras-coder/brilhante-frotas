@@ -111,8 +111,20 @@ const Nuvem = (() => {
     const b = DB.get();
     const porId = new Map((b.usuarios || []).map(u => [u.id, u]));
     const antes = JSON.stringify(b.usuarios || []);
-    // mantém a senha em cache local só como reserva offline (não é mais usada pra login online)
-    b.usuarios = remotos.map(r => ({ ...r, senha: (porId.get(r.id) || {}).senha || '' }));
+    // mantém a senha em cache local só como reserva offline (não é mais usada pra login online).
+    // Se a nuvem não tiver permissões preenchidas pra alguém (ficha antiga),
+    // não deixa isso apagar o que já existe neste aparelho — mantém o local
+    // ou cai pro padrão do perfil, nunca fica sem nenhuma.
+    b.usuarios = remotos.map(r => {
+      const local = porId.get(r.id) || {};
+      const semPermissoes = !Array.isArray(r.permissoes) || !r.permissoes.length;
+      return {
+        ...r, senha: local.senha || '',
+        permissoes: semPermissoes
+          ? ((Array.isArray(local.permissoes) && local.permissoes.length) ? local.permissoes : Perm.doPerfil(r.perfil))
+          : r.permissoes
+      };
+    });
     DB.save();
     return JSON.stringify(b.usuarios) !== antes;
   }

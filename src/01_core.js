@@ -209,7 +209,19 @@ const DB = (() => {
       delete d.config.usuario; delete d.config.senha;
       save();
     }
-    d.usuarios.forEach(u => { if (!Array.isArray(u.permissoes)) u.permissoes = Perm.doPerfil(u.perfil); });
+    // Corrige tanto quem nunca teve o campo (bases antigas) quanto quem ficou
+    // com a lista vazia por causa de uma sincronização com a nuvem que ainda
+    // não tinha as permissões preenchidas do lado de lá (semente da v6.0) —
+    // sem isso, o usuário perde acesso a tudo sem nenhum aviso, mesmo
+    // conseguindo entrar normalmente.
+    let corrigiuPermVazia = false;
+    d.usuarios.forEach(u => {
+      if (u.perfil !== 'Administrador' && (!Array.isArray(u.permissoes) || !u.permissoes.length)) {
+        u.permissoes = Perm.doPerfil(u.perfil);
+        corrigiuPermVazia = true;
+      }
+    });
+    if (corrigiuPermVazia) save();
     // Mecânico nunca deve ter a permissão de dashboard salva na ficha (mesmo que
     // tenha sido marcada manualmente antes desta regra existir). Perm.pode() já
     // bloqueia isso na prática, mas aqui a ficha do usuário fica consistente
