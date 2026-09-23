@@ -34,12 +34,27 @@ const VERSAO = window.APP_VERSAO || { n: '0', data: '' };
 /* ---------- Autenticação ---------- */
 const Auth = {
   /** Retorna null em caso de sucesso, ou a mensagem do que impediu a entrada.
-   *  Confere direto na nuvem (fonte da verdade) sempre que possível, pra uma
-   *  troca de senha feita em qualquer computador valer em todos. Sem internet
-   *  ou com o Supabase fora do ar, cai pra reserva local (último dado salvo
-   *  neste aparelho). */
+   *  Confere primeiro a reserva local (o que já funciona hoje neste
+   *  aparelho) e só recorre à nuvem se não reconhecer o login — caso de uma
+   *  conta nova, criada em outro computador, ou de uma senha trocada em
+   *  outro aparelho antes de bater aqui. Assim uma nuvem desatualizada,
+   *  fora do ar, ou ainda sem a sincronização ligada nunca derruba um login
+   *  que já funcionava. */
   async entrar(login, senha) {
-    let curarNuvem = false;
+    // Reserva local primeiro: é o que já funcionava pra quem já usa o sistema
+    // neste aparelho, e continua funcionando mesmo se a nuvem estiver
+    // desatualizada, fora do ar, ou a sincronização ainda não tiver sido
+    // ligada no banco. Só recorre à nuvem quando o aparelho não reconhece o
+    // login — caso de uma conta nova, criada em outro computador.
+    const u = DB.usuarioPorLogin(login);
+    if (u && String(u.senha).trim() === String(senha).trim()) {
+      if (u.status !== 'Ativo') return 'Este usuário está inativo. Procure o administrador do sistema.';
+      u.ultimoAcesso = Dt.today();
+      DB.save();
+      Auth.aplicar(u);
+      try { sessionStorage.setItem('brilhante_sessao', u.id); } catch (e) { }
+      return null;
+    }
     if (window.Nuvem) {
       try {
         const uNuvem = await Nuvem.verificarLoginNuvem(login, senha);
@@ -54,25 +69,9 @@ const Auth = {
           try { sessionStorage.setItem('brilhante_sessao', mesclado.id); } catch (e) { }
           return null;
         }
-        // A nuvem respondeu (sem sair do ar) mas não bateu usuário/senha. Antes
-        // de recusar de vez, confere a reserva local: pode ser uma senha trocada
-        // antes desta sincronização existir e que nunca chegou a subir pro banco.
-        curarNuvem = true;
-      } catch (e) { /* sem rede/Supabase fora do ar: segue pra reserva local abaixo */ }
+      } catch (e) { /* sem rede/Supabase fora do ar: já conferimos a reserva local acima */ }
     }
-    const u = DB.usuarioPorLogin(login);
-    if (!u || String(u.senha).trim() !== String(senha).trim()) return 'Usuário ou senha incorretos. Verifique e tente novamente.';
-    if (u.status !== 'Ativo') return 'Este usuário está inativo. Procure o administrador do sistema.';
-    u.ultimoAcesso = Dt.today();
-    DB.save();
-    Auth.aplicar(u);
-    try { sessionStorage.setItem('brilhante_sessao', u.id); } catch (e) { }
-    if (curarNuvem && window.Nuvem) {
-      // bateu local mas não na nuvem: sobe a senha atual pra nuvem agora, sem
-      // travar a entrada, pra corrigir a divergência e não cair de novo.
-      try { Nuvem.salvarUsuarioNuvem(u, u.senha).catch(() => { }); } catch (e) { }
-    }
-    return null;
+    return 'Usuário ou senha incorretos. Verifique e tente novamente.';
   },
   aplicar(u) {
     Estado.usuario = {
