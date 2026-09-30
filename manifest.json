@@ -1,0 +1,18 @@
+{
+  "name": "Grupo Brilhante · Ordens de Serviço",
+  "short_name": "Brilhante OS",
+  "description": "Sistema de ordens de serviço e gestão de manutenção de frotas do Grupo Brilhante.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0C1F55",
+  "theme_color": "#0C1F55",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}
