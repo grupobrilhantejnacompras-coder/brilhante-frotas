@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Gera o arquivo único Sistema_OS_Grupo_Brilhante.html a partir de src/."""
-import json, pathlib, datetime, hashlib
+import json, pathlib, datetime, hashlib, base64
 
 BASE = pathlib.Path(__file__).resolve().parent
 SRC = BASE / 'src'
@@ -12,6 +12,9 @@ css = (SRC / 'style.css').read_text(encoding='utf-8')
 js = '\n\n'.join((SRC / f).read_text(encoding='utf-8') for f in ORDEM)
 dados = json.load(open(BASE / 'dados_brilhante.json', encoding='utf-8'))
 logo = (BASE / 'logo_min.svg').read_text(encoding='utf-8').strip()
+# Ícone (logo oficial sobre fundo azul royal) embutido como data URI, pra
+# funcionar tanto no site publicado quanto no arquivo único aberto local.
+favicon_b64 = base64.b64encode((BASE / 'favicon.png').read_bytes()).decode()
 
 # Versão: string em VERSAO.txt (ex.: 5.1) + data da geração. Ajuste o arquivo ao publicar.
 vfile = BASE / 'VERSAO.txt'
@@ -26,7 +29,13 @@ html = f"""<!DOCTYPE html>
 <meta name="theme-color" content="#0C1F55">
 <meta name="description" content="Sistema de ordens de serviço e gestão de manutenção de frotas do Grupo Brilhante.">
 <title>Grupo Brilhante · Ordens de Serviço de Frotas</title>
-<link rel="icon" href="data:image/svg+xml,{'%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2218%22 fill=%22%231B3FAE%22/%3E%3Cpath d=%22M50 20 78 42 50 82 22 42Z%22 fill=%22%23fff%22/%3E%3C/svg%3E'}">
+<link rel="icon" href="data:image/png;base64,{favicon_b64}">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Brilhante OS">
 <style>
 {css}
 </style>
