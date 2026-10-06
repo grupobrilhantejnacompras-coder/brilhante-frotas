@@ -123,8 +123,10 @@ const Chart = (() => {
       const estilo = `transform:scaleY(0);color:${cor}` + (it.filtro != null ? ';cursor:pointer' : '');
       s += `<rect class="bar fx-v" x="${x}" y="${y}" width="${bw}" height="${H}" rx="5" fill="${cor}" style="${estilo}"${df}` +
         ` data-tip="${Fmt.esc(it.tip || (it.rotulo + ': ' + fmt(it.valor)))}"/>`;
-      s += `<text x="${x + bw / 2}" y="${y - 7}" text-anchor="middle" class="lbl-v" style="font-size:11px">${fmt(it.valor)}</text>`;
-      s += `<text x="${x + bw / 2}" y="${h - pb + 17}" text-anchor="middle" style="font-size:11px">${Fmt.esc(corta(it.rotulo, 12))}</text>`;
+      // o.semValor / o.passoRotulo (opcionais): com muitas colunas (ex.: 26 semanas) os números
+      // e os rótulos se atropelam — aí só mostra um rótulo a cada N colunas e deixa o valor no tooltip.
+      if (!o.semValor) s += `<text x="${x + bw / 2}" y="${y - 7}" text-anchor="middle" class="lbl-v" style="font-size:11px">${fmt(it.valor)}</text>`;
+      if (i % (o.passoRotulo || 1) === 0) s += `<text x="${x + bw / 2}" y="${h - pb + 17}" text-anchor="middle" style="font-size:11px">${Fmt.esc(corta(it.rotulo, 12))}</text>`;
     });
     return s + '</svg>';
   }

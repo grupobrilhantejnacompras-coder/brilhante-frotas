@@ -194,6 +194,8 @@ textarea.input{min-height:88px; resize:vertical}
 .kpi .k-lab{font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; position:relative}
 .kpi .k-val{font-size:clamp(20px,1.85vw,26px); font-weight:800; letter-spacing:-.02em; line-height:1.1; color:var(--ink)}
 .kpi .k-sub{font-size:12px; color:var(--muted); margin-top:5px}
+/* aba Evolução: 6 cartões lado a lado — valores de 6 dígitos (R$ 112.665) não podem ser cortados */
+.kpis-evo .k-val{font-size:clamp(17px,1.5vw,22px)}
 .kpi.alert::after{background:var(--amber-bg)}
 .kpi.alert .k-val{color:var(--amber)}
 

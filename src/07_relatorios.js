@@ -4,7 +4,9 @@
 const Relatorios = (() => {
   const st = {
     aba: 'semanal', de: Dt.weekStart(Dt.today()), ate: Dt.add(Dt.weekStart(Dt.today()), 6),
-    fx: { local: '', grupo: '', mecanico: '', tipo: '' }
+    fx: { local: '', grupo: '', mecanico: '', tipo: '' },
+    // aba "Evolução": gran = 'mes' | 'sem'; n = quantos períodos mostrar (0 = tudo)
+    ev: { gran: 'mes', n: { mes: 0, sem: 12 }, local: '' }
   };
 
   function pagina() {
@@ -15,6 +17,8 @@ const Relatorios = (() => {
         <button class="chip${st.aba === 'semanal' ? ' on' : ''}" data-aba="semanal">Relatório semanal</button>
         <button class="chip${st.aba === 'executivo' ? ' on' : ''}" data-aba="executivo">Resumo executivo</button>
         <button class="chip${st.aba === 'diretoria' ? ' on' : ''}" data-aba="diretoria">Painel da diretoria</button>
+        <button class="chip${st.aba === 'evolucao' ? ' on' : ''}" data-aba="evolucao">Evolução mês a mês</button>
+        <div class="row" id="nav-periodo" style="display:${st.aba === 'evolucao' ? 'none' : 'contents'}">
         <span style="width:12px"></span>
         <button class="btn ghost sm" id="sem-ant">‹ Anterior</button>
         <input class="input" type="date" id="r-de" value="${st.de}" style="max-width:158px" aria-label="Data inicial">
@@ -23,6 +27,7 @@ const Relatorios = (() => {
         <button class="btn ghost sm" id="sem-prox">Próxima ›</button>
         <div class="spacer"></div>
         <button class="btn ghost sm" id="ir-ultima">Última semana com movimento</button>
+        </div>
       </div></div></section>
       <div id="relatorio"></div></div>`;
   }
@@ -316,10 +321,133 @@ const Relatorios = (() => {
       `<div style="margin-top:var(--s4)">${tabVeic}</div>` + tabRec;
   }
 
+  /* ---------- evolução: mês a mês (ou semana a semana) ---------- */
+  const MES_C = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const MES_L = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  // eixo curto dos gráficos: "12,3 mil" / "390" (o "R$" fica no título do gráfico)
+  const curto = v => Math.abs(v) >= 1000 ? Fmt.num1(v / 1000) + ' mil' : Fmt.num(v);
+
+  /** Monta uma linha do tempo contínua (meses ou semanas, inclusive os sem nenhuma OS). */
+  function baldes(gran, n, os, fim) {
+    const mes = gran === 'mes';
+    const ini = mes ? Dt.monthStart : Dt.weekStart;
+    const prox = mes ? i => Dt.add(Dt.monthEnd(i), 1) : i => Dt.add(i, 7);
+    const ant = mes ? i => Dt.monthStart(Dt.add(i, -1)) : i => Dt.add(i, -7);
+    const ultimo = ini(fim);
+    let primeiro = ultimo;
+    if (n) { for (let k = 1; k < n; k++) primeiro = ant(primeiro); }
+    else { const ds = os.map(o => o.data).sort(); if (ds.length) primeiro = ini(ds[0]); }
+    const hoje = Dt.today(), mapa = new Map();
+    for (let k = primeiro; k <= ultimo; k = prox(k)) {
+      const f = mes ? Dt.monthEnd(k) : Dt.add(k, 6);
+      const [y, m] = k.split('-').map(Number);
+      mapa.set(k, {
+        chave: k, fim: f, qtd: 0, valor: 0, itens: 0, veic: new Set(), parcial: f >= hoje, aviso: k > hoje ? 'data futura' : 'em andamento',
+        rotulo: mes ? MES_C[m - 1] + '/' + String(y).slice(2) : Fmt.dateShort(k),
+        longo: mes ? MES_L[m - 1] + ' de ' + y : 'semana de ' + Fmt.date(k) + ' a ' + Fmt.date(f)
+      });
+    }
+    os.forEach(o => {
+      const b = mapa.get(ini(o.data));
+      if (!b) return;
+      b.qtd++; b.valor += o.total || 0; b.itens += Q.qtdItens([o]); b.veic.add(o.veiculoId);
+    });
+    return [...mapa.values()];
+  }
+
+  function evolucao() {
+    const e = st.ev, mes = e.gran === 'mes', un = mes ? 'mês' : 'semana';
+    const hoje = Dt.today();
+    const base = DB.get().ordens.filter(o => o.data);
+    const locais = [...new Set(base.map(o => o.local).filter(Boolean))].sort((a, c) => a.localeCompare(c, 'pt-BR'));
+    if (e.local && !locais.includes(e.local)) e.local = '';
+    const os = base.filter(o => !e.local || o.local === e.local);
+
+    const opN = mes
+      ? [{ v: 6, t: 'Últimos 6 meses' }, { v: 12, t: 'Últimos 12 meses' }, { v: 0, t: 'Todo o período' }]
+      : [{ v: 8, t: 'Últimas 8 semanas' }, { v: 12, t: 'Últimas 12 semanas' }, { v: 26, t: 'Últimas 26 semanas' }, { v: 0, t: 'Todo o período' }];
+    const controles = `<section class="card no-print"><div class="card-b"><div class="row">
+      <span class="dim" style="font-size:12.5px">Agrupar por</span>
+      <button class="chip${mes ? ' on' : ''}" data-ev-gran="mes">Mês a mês</button>
+      <button class="chip${!mes ? ' on' : ''}" data-ev-gran="sem">Semana a semana</button>
+      <span style="width:12px"></span>
+      <select class="input" id="ev-n" style="max-width:190px" aria-label="Período exibido">${UI.opcoes(opN, e.n[e.gran])}</select>
+      <select class="input" id="ev-local" style="max-width:200px" aria-label="Local ou unidade">${UI.opcoes(locais, e.local, 'Todos os locais')}</select>
+    </div></div></section>`;
+
+    if (!os.length) return controles + `<div style="margin-top:var(--s4)">${UI.card('', UI.vazio('Nenhuma OS registrada',
+      e.local ? 'Não há ordens de serviço para ' + e.local + '.' : 'Registre ordens de serviço para acompanhar a evolução.'), '', true)}</div>`;
+
+    // a linha do tempo termina no período de hoje (ou da OS mais recente, se estiver adiante)
+    const maisRecente = os.reduce((m, o) => o.data > m ? o.data : m, hoje);
+    const serie = baldes(e.gran, e.n[e.gran], os, maisRecente);
+    const total = serie.reduce((s2, b) => s2 + b.valor, 0);
+    const qtd = serie.reduce((s2, b) => s2 + b.qtd, 0);
+    const fechados = serie.filter(b => !b.parcial);
+    const mediaBase = fechados.length ? fechados : serie;
+    const media = mediaBase.reduce((s2, b) => s2 + b.valor, 0) / mediaBase.length;
+    const pico = serie.reduce((m, b) => b.valor > m.valor ? b : m, serie[0]);
+    // variação: último período FECHADO contra o anterior (período em andamento não entra na conta)
+    const ult = fechados[fechados.length - 1], pen = fechados[fechados.length - 2];
+    const varia = (ult && pen && pen.valor) ? ((ult.valor - pen.valor) / pen.valor) * 100 : null;
+
+    const kpis = `<div class="grid kpis kpis-evo" style="margin-top:var(--s4)">
+      ${UI.kpi('Valor total', Fmt.money0(total), serie.length + (mes ? (serie.length === 1 ? ' mês' : ' meses') : (serie.length === 1 ? ' semana' : ' semanas')))}
+      ${UI.kpi('Média por ' + un, Fmt.money0(media), mediaBase === fechados ? (mes ? 'meses fechados' : 'semanas fechadas') : 'período em andamento')}
+      ${UI.kpi('Ordens de serviço', Fmt.num(qtd))}
+      ${UI.kpi('Custo médio por OS', Fmt.money0(qtd ? total / qtd : 0))}
+      ${UI.kpi('Maior gasto', Fmt.money0(pico.valor), pico.valor ? Fmt.esc(pico.longo) : 'sem gastos no período')}
+      ${varia == null ? UI.kpi('Variação', '—', 'precisa de 2 ' + (mes ? 'meses fechados' : 'semanas fechadas') + ' com gasto')
+        : UI.kpi('Variação', `<span style="color:${varia > 0 ? 'var(--red)' : 'var(--green)'};-webkit-text-fill-color:currentColor">${varia > 0 ? '▲ +' : '▼ '}${Fmt.num1(Math.abs(varia))}%</span>`,
+          Fmt.esc(ult.rotulo) + ' vs. ' + Fmt.esc(pen.rotulo))}
+    </div>`;
+
+    const passo = Math.max(1, Math.ceil(serie.length * 36 / 640));   // um rótulo a cada ~36px
+    const muitas = serie.length > 12;
+    const opcoes = (fmt, aria) => ({ fmt, aria, semValor: muitas, passoRotulo: passo });
+    const PARCIAL = '#8FA6E8';
+    const itensValor = serie.map(b => ({
+      rotulo: b.rotulo, valor: b.valor, cor: b.parcial ? PARCIAL : undefined,
+      tip: `${b.longo}: ${Fmt.money(b.valor)} · ${b.qtd} OS` + (b.parcial ? ' (' + b.aviso + ')' : '')
+    }));
+    const itensQtd = serie.map(b => ({
+      rotulo: b.rotulo, valor: b.qtd, cor: b.parcial ? PARCIAL : undefined,
+      tip: `${b.longo}: ${b.qtd} OS · ${b.veic.size} veículos` + (b.parcial ? ' (' + b.aviso + ')' : '')
+    }));
+    const legenda = serie.some(b => b.parcial)
+      ? `<div class="legend"><span><i style="background:${Chart.AZUL}"></i>${mes ? 'mês fechado' : 'semana fechada'}</span><span><i style="background:${PARCIAL}"></i>em andamento / data futura</span></div>` : '';
+    const graficos = `<div class="grid g2" style="margin-top:var(--s4)">
+      ${UI.card('Valor gasto por ' + un + ' (R$)', Chart.barsV(itensValor, opcoes(curto, 'Valor gasto por ' + un)) + legenda)}
+      ${UI.card('Ordens de serviço por ' + un, Chart.barsV(itensQtd, opcoes(Fmt.num, 'Ordens de serviço por ' + un)) + legenda)}
+    </div>`;
+
+    // tabela: do mais recente pro mais antigo; variação sempre contra o período anterior da linha do tempo
+    const linhas = serie.map((b, i) => {
+      const a = serie[i - 1];
+      const v = (!b.parcial && a && a.valor) ? ((b.valor - a.valor) / a.valor) * 100 : null;
+      return {
+        p: `<span class="strong">${Fmt.esc(mes ? b.rotulo : b.longo.charAt(0).toUpperCase() + b.longo.slice(1))}</span>` + (b.parcial ? ` <span class="badge b-blue">${b.aviso}</span>` : ''),
+        n: Fmt.num(b.qtd), vc: Fmt.num(b.veic.size), s: Fmt.num(b.itens),
+        t: `<span class="strong">${Fmt.money(b.valor)}</span>`,
+        tk: b.qtd ? Fmt.money(b.valor / b.qtd) : '<span class="dim">—</span>',
+        d: v == null ? '<span class="dim">—</span>' : `<span style="color:${v > 0 ? 'var(--red)' : v < 0 ? 'var(--green)' : 'inherit'}">${v > 0 ? '▲ +' : v < 0 ? '▼ ' : ''}${Fmt.num1(Math.abs(v))}%</span>`
+      };
+    }).reverse();
+    const tabela = UI.card('Valores por ' + un, UI.tabela(
+      [{ t: mes ? 'Mês' : 'Semana', k: 'p' }, { t: 'OS', k: 'n', cls: 'ta-r' }, { t: 'Veículos', k: 'vc', cls: 'ta-r' },
+      { t: 'Serviços', k: 's', cls: 'ta-r' }, { t: 'Valor gasto', k: 't', cls: 'ta-r' },
+      { t: 'Custo médio por OS', k: 'tk', cls: 'ta-r' }, { t: 'Variação', k: 'd', cls: 'ta-r' }],
+      linhas, { total: { p: 'TOTAL', n: Fmt.num(qtd), t: Fmt.money(total), tk: qtd ? Fmt.money(total / qtd) : '' } }),
+      '', true);
+
+    return controles + kpis + graficos + `<div style="margin-top:var(--s4)">${tabela}</div>`;
+  }
+
   function ligar() {
     const pintar = () => {
       const el = document.getElementById('relatorio');
-      el.innerHTML = st.aba === 'semanal' ? semanal() : st.aba === 'executivo' ? executivo() : diretoria();
+      el.innerHTML = st.aba === 'semanal' ? semanal() : st.aba === 'executivo' ? executivo()
+        : st.aba === 'evolucao' ? evolucao() : diretoria();
       Chart.ligarTooltips(el);
       // filtros por clique nas barras
       el.querySelectorAll('[data-f]').forEach(r => r.addEventListener('click', () => {
@@ -332,6 +460,11 @@ const Relatorios = (() => {
         if (k === '__todos') st.fx = { local: '', grupo: '', mecanico: '', tipo: '' }; else st.fx[k] = '';
         pintar();
       }));
+      el.querySelectorAll('[data-ev-gran]').forEach(b => b.addEventListener('click', () => { st.ev.gran = b.dataset.evGran; pintar(); }));
+      const evN = document.getElementById('ev-n');
+      if (evN) evN.addEventListener('change', () => { st.ev.n[st.ev.gran] = Number(evN.value); pintar(); });
+      const evL = document.getElementById('ev-local');
+      if (evL) evL.addEventListener('change', () => { st.ev.local = evL.value; pintar(); });
       el.querySelectorAll('[data-veic]').forEach(tr => tr.addEventListener('click', () => App.irPara('veiculo/' + tr.dataset.veic)));
       const bx = document.getElementById('exp-baixar');
       if (bx) bx.addEventListener('click', () => Exportar.baixar(st.de, st.ate));
@@ -344,6 +477,7 @@ const Relatorios = (() => {
       st.aba = b.dataset.aba;
       if (st.aba !== 'diretoria') st.fx = { local: '', grupo: '', mecanico: '', tipo: '' };
       document.querySelectorAll('[data-aba]').forEach(x => x.classList.toggle('on', x.dataset.aba === st.aba));
+      document.getElementById('nav-periodo').style.display = st.aba === 'evolucao' ? 'none' : 'contents';
       pintar();
     }));
     const de = document.getElementById('r-de'), ate = document.getElementById('r-ate');
