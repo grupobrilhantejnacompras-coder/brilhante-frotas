@@ -198,6 +198,35 @@ const DB = (() => {
     save();
     return d;
   }
+  /* Equipe Ar Condicionado e Gemerson são a mesma pessoa: tudo que estava
+     lançado na "Equipe Ar Condicionado" passa a ser do Gemerson. Idempotente
+     (pode rodar a cada carga) e devolve só as O.S. que mudaram, para o
+     sincronismo reenviá-las à nuvem. */
+  const MECANICOS_RENOMEADOS = { 'equipe ar condicionado': 'Gemerson' };
+  const chaveMec = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
+  function nomeMecanico(texto) {
+    const parte = String(texto == null ? '' : texto);
+    if (!parte) return parte;
+    const nomes = parte.split(',').map(s => s.trim()).filter(Boolean);
+    if (!nomes.some(n => MECANICOS_RENOMEADOS[chaveMec(n)])) return parte;
+    const novos = [];
+    nomes.forEach(n => { const m = MECANICOS_RENOMEADOS[chaveMec(n)] || n; if (!novos.includes(m)) novos.push(m); });
+    return novos.join(', ');
+  }
+  function normalizarMecanicos(base) {
+    const b = base || d; const alteradas = [];
+    if (!b) return alteradas;
+    (b.ordens || []).forEach(o => {
+      const novo = nomeMecanico(o.mecanico);
+      if (novo !== (o.mecanico == null ? '' : String(o.mecanico))) { o.mecanico = novo; alteradas.push(o); }
+    });
+    if (Array.isArray(b.mecanicos)) {
+      const lista = []; let mudou = false;
+      b.mecanicos.forEach(m => { const n = nomeMecanico(m); if (n !== m) mudou = true; if (n && !lista.includes(n)) lista.push(n); });
+      if (mudou) b.mecanicos = lista.sort();
+    }
+    return alteradas;
+  }
   /** Bases criadas antes do módulo de usuários continuam funcionando. */
   function migrar() {
     if (!Array.isArray(d.usuarios) || !d.usuarios.length) {
@@ -225,6 +254,7 @@ const DB = (() => {
       }
     });
     if (corrigiuPermVazia) save();
+    if (normalizarMecanicos().length) save();
     // Mecânico nunca deve ter a permissão de dashboard salva na ficha (mesmo que
     // tenha sido marcada manualmente antes desta regra existir). Perm.pode() já
     // bloqueia isso na prática, mas aqui a ficha do usuário fica consistente
@@ -397,6 +427,7 @@ const DB = (() => {
     let num = proximoNumero();
     b.ordens.forEach(o => {
       const c = JSON.parse(JSON.stringify(o));
+      c.mecanico = nomeMecanico(c.mecanico);
       c.veiculoId = deParaV[c.veiculoId] || c.veiculoId;
       if (idsOS.has(c.id) || sig.has(assinaturaOS(c))) return;
       c.id = 'OS' + Date.now().toString(36).toUpperCase() + r.ordens;
@@ -411,7 +442,7 @@ const DB = (() => {
       at.usuarios.push(c); logins.add(String(c.usuario).toLowerCase()); r.usuarios++;
     });
     ['locais', 'condutores', 'mecanicos'].forEach(k => {
-      (b[k] || []).forEach(x => { if (x && !at[k].includes(x)) at[k].push(x); });
+      (b[k] || []).forEach(x => { if (k === 'mecanicos') x = nomeMecanico(x); if (x && !at[k].includes(x)) at[k].push(x); });
       at[k].sort();
     });
     save();
@@ -419,7 +450,7 @@ const DB = (() => {
   }
 
   return {
-    get, load, save, veiculo, servico, nomeVeiculo, rotuloVeiculo, salvarOS, excluirOS,
+    get, load, save, normalizarMecanicos, nomeMecanico, veiculo, servico, nomeVeiculo, rotuloVeiculo, salvarOS, excluirOS,
     salvarVeiculo, salvarServico, proximoNumero, restaurar, exportarJSON,
     lerBackup, conferirBackup, importarBackup,
     usuarios, usuarioPorLogin, salvarUsuario, excluirUsuario,

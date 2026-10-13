@@ -5,20 +5,20 @@
 /* ---------- Chart: gráficos SVG sem dependências ---------- */
 const Chart = (() => {
   // Série única = magnitude → uma cor só (a cor segue a entidade, nunca o ranking).
-  // Identidade v6.15: verde institucional como série única (os nomes AZUL/CIANO ficam por
-  // compatibilidade com o resto do código, mas hoje apontam para o verde da marca).
-  const AZUL = '#14513C', AMBAR = '#A8530B', TRILHO = '#EBF1EE', CIANO = '#14513C', OURO = '#B8924A';
-  // Categorias (rosca): verde, dourado, verde-claro, preto, ouro-escuro, sálvia — nunca arco-íris.
-  const CAT = ['#14513C', '#B8924A', '#5F8F7A', '#2D3833', '#8F6F2F', '#9DBFAF'];
+  // Identidade v6.15: azul royal institucional como série única (os nomes AZUL/CIANO ficam por
+  // compatibilidade com o resto do código, mas hoje apontam para o azul royal da marca).
+  const AZUL = '#3D459F', AMBAR = '#A8530B', TRILHO = '#EAECF6', CIANO = '#3D459F', OURO = '#B8924A';
+  // Categorias (rosca): azul royal, cinza, azul-claro, azul-marinho, cinza-claro, azul-médio — nunca arco-íris.
+  const CAT = ['#3D459F', '#6B7280', '#8A91CF', '#1F2557', '#9CA3AF', '#5B64C4'];
   // Série única = uma cor só; a cor não varia por nome (antes era sorteada por hash e não significava nada).
   function corCiano() { return AZUL; }
   let tip;
   function tooltip() {
     if (!tip) {
       tip = document.createElement('div');
-      tip.style.cssText = 'position:fixed;z-index:300;background:#08241B;color:#fff;padding:7px 11px;' +
+      tip.style.cssText = 'position:fixed;z-index:300;background:#1F2557;color:#fff;padding:7px 11px;' +
         'border-radius:7px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .1s;' +
-        'box-shadow:0 4px 12px rgba(8,36,27,.25);max-width:230px;font-weight:500;font-variant-numeric:tabular-nums';
+        'box-shadow:0 4px 12px rgba(31,37,87,.25);max-width:230px;font-weight:500;font-variant-numeric:tabular-nums';
       document.body.appendChild(tip);
     }
     return tip;
@@ -204,7 +204,7 @@ const Chart = (() => {
     }
     // cor estável por categoria — "Freios" tem sempre a mesma cor, na rosca e nas barras;
     // "Outros" fica sempre em cinza neutro (não é uma categoria real).
-    const corDe = it => it.cor || (it.rotulo === 'Outros' ? '#98A39D' : corCategoria(it.rotulo));
+    const corDe = it => it.cor || (it.rotulo === 'Outros' ? '#9CA3AF' : corCategoria(it.rotulo));
     const R = 70, CX = 90, CY = 90, SW = 26, C = 2 * Math.PI * R;
     let acc = 0;
     let s = `<svg class="chart donut" viewBox="0 0 180 180" role="img" aria-label="${Fmt.esc(o.aria || 'Gráfico de composição')}">`;

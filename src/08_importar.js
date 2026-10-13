@@ -191,7 +191,7 @@ const Importar = (() => {
         }
         const setor = n.includes('mola') ? 'Posto de Mola' : /\bar\b|ar cond/.test(n) ? 'Ar Condicionado'
           : cab.fmt === 'B' ? 'Operação Florestal' : 'Mecânica';
-        const mecPadrao = setor === 'Posto de Mola' ? 'Vandame' : setor === 'Ar Condicionado' ? 'Equipe Ar Condicionado' : 'Jeferson';
+        const mecPadrao = setor === 'Posto de Mola' ? 'Vandame' : setor === 'Ar Condicionado' ? 'Gemerson' : 'Jeferson';
         let data = null, km = null;
         const porData = new Map();   // uma OS por data dentro do bloco
         for (let r = cab.ri + 1; r <= fim; r++) {

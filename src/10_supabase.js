@@ -77,6 +77,13 @@ const Nuvem = (() => {
     subir.forEach(o => { if (!mapa.has(o.id)) mapa.set(o.id, o); });
     base.ordens = [...mapa.values()];
     base.sincronizados = [...mapa.keys()];
+    // "Equipe Ar Condicionado" → Gemerson (mesma pessoa): corrige o que veio da nuvem
+    // e grava de volta lá; se falhar (offline), a próxima sincronização tenta de novo.
+    const renomeadas = DB.normalizarMecanicos(base);
+    if (renomeadas.length) {
+      try { await enviarVarias(renomeadas); }
+      catch (e) { online = false; base.sincronizados = base.sincronizados.filter(id => !renomeadas.some(o => o.id === id)); }
+    }
     DB.save();
     return true;
   }
