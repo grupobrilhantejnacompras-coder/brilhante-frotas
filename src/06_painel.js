@@ -67,23 +67,52 @@ const Painel = (() => {
     const semanas = Q.porSemana(os);
     const porMec = Q.porChave(os, o => o.mecanico);
 
-    const kpis = `<div class="grid kpis">
-      ${UI.kpi('OS realizadas', Fmt.num(os.length), Filtros.resumo())}
-      ${UI.kpi('Veículos atendidos', Fmt.num(veic.size), veic.size ? 'de ' + Fmt.num(b.veiculos.length) + ' na frota' : '')}
-      ${UI.kpi('Valor total dos serviços', Fmt.money0(total))}
-      ${UI.kpi('Serviços realizados', Fmt.num(itens), 'itens lançados nas OS')}
-      ${UI.kpi('Custo médio por OS', Fmt.money0(os.length ? total / os.length : 0))}
-      ${UI.kpi('Reincidências', Fmt.num(rec.length), rec.length ? 'veículos que voltaram pelo mesmo sistema' : 'nenhuma no período', rec.length > 0)}
+    // OS ainda não concluídas: considera TODA a base (uma OS aberta no mês passado continua pendente
+    // mesmo que o filtro de período esteja em "este mês"). Dado real — nada é estimado.
+    const pendentes = b.ordens.filter(o => o.status === 'Aberta' || o.status === 'Em andamento')
+      .sort((x, y) => (x.data || '').localeCompare(y.data || '') || x.numero - y.numero);
+    const recentes = os.slice().sort((x, y) => (y.data || '').localeCompare(x.data || '') || y.numero - x.numero).slice(0, 6);
+
+    const kpis = `<div class="sec-t">Ordens de serviço</div><div class="grid kpis">
+      ${UI.kpi('OS realizadas', Fmt.num(os.length), Filtros.resumo(), false, 'ordens')}
+      ${UI.kpi('Valor total dos serviços', Fmt.money0(total), '', false, 'dinheiro')}
+      ${UI.kpi('Custo médio por OS', Fmt.money0(os.length ? total / os.length : 0), '', false, 'grafico')}
+      ${UI.kpi('Serviços realizados', Fmt.num(itens), 'itens lançados nas OS', false, 'serv')}
+    </div>
+    <div class="sec-t">Frota</div><div class="grid kpis">
+      ${UI.kpi('Veículos atendidos', Fmt.num(veic.size), veic.size ? 'de ' + Fmt.num(b.veiculos.length) + ' na frota' : '', false, 'veic')}
+      ${UI.kpi('Reincidências', Fmt.num(rec.length), rec.length ? 'veículos que voltaram pelo mesmo sistema' : 'nenhuma no período', rec.length > 0 ? 'crit' : 'ok', 'repetir')}
+      ${UI.kpi('OS pendentes', Fmt.num(pendentes.length), pendentes.length ? 'abertas ou em andamento' : 'nenhuma pendente', pendentes.length > 0, 'relogio')}
     </div>`;
 
-    const boxAlertas = alrt.length ? `<section class="card"><div class="card-h"><h2>⚠️ Atenção</h2>
+    const boxAlertas = alrt.length ? `<section class="card"><div class="card-h"><h2><span class="ic">${Ico.alerta}</span>Atenção</h2>
       <div class="spacer"></div><span class="dim">${alrt.length} ${alrt.length === 1 ? 'situação' : 'situações'}</span></div>
       <div class="card-b"><div class="stack" style="gap:9px">${alrt.map(a =>
-      `<div class="row" style="gap:10px;align-items:flex-start">
-          <span class="badge ${a.nivel === 'alto' ? 'b-amber' : 'b-gray'}">${a.nivel === 'alto' ? 'Prioridade' : 'Observar'}</span>
+      `<div class="atn ${a.nivel === 'alto' ? 'crit' : 'warn'}">
+          <span class="badge ${a.nivel === 'alto' ? 'b-red' : 'b-amber'}">${a.nivel === 'alto' ? 'Prioridade' : 'Observar'}</span>
           <span style="flex:1;min-width:0">${a.txt}</span>
           <button class="btn ghost sm" data-veic="${Fmt.esc(a.vid)}">Ver veículo</button></div>`).join('')}
       </div></div></section>` : '';
+
+    // Manutenções pendentes e últimas OS — listas compactas, só com dados reais.
+    const linhaOS = (o, extra) => {
+      const v = DB.veiculo(o.veiculoId) || {};
+      return `<div class="li" data-os="${Fmt.esc(o.id)}" role="button" tabindex="0">
+        <span class="n">OS ${Fmt.esc(o.numero)}</span>
+        <span class="m"><span class="t" style="display:block">${Fmt.esc(v.nome || o.placa || '—')}${v.placa && v.placa !== '—' ? ' · ' + Fmt.esc(v.placa) : ''}</span>
+          <span class="s" style="display:block">${Fmt.date(o.data)} · ${Fmt.esc(o.mecanico || 'sem mecânico')}${o.local ? ' · ' + Fmt.esc(o.local) : ''}</span></span>
+        <span class="r"><strong>${Fmt.money(o.total)}</strong>${extra}</span></div>`;
+    };
+    const hoje = Dt.today();
+    const idade = o => { try { const d = Math.round((new Date(hoje) - new Date(o.data)) / 86400000); return d > 0 ? `há ${d} ${d === 1 ? 'dia' : 'dias'}` : 'hoje'; } catch (e) { return ''; } };
+    const boxPendentes = UI.card('Manutenções pendentes', pendentes.length
+      ? `<div class="lista-os">${pendentes.slice(0, 6).map(o => linhaOS(o, `${UI.badgeStatus(o.status)} <span class="dim">${idade(o)}</span>`)).join('')}</div>` +
+        (pendentes.length > 6 ? `<div class="card-b dim" style="border-top:1px solid var(--line)">+ ${pendentes.length - 6} OS pendentes — veja em Ordens de Serviço (filtro Situação).</div>` : '')
+      : UI.sucesso('Nenhuma manutenção pendente', 'Todas as ordens de serviço estão concluídas ou canceladas.'),
+      pendentes.length ? `<span class="badge b-amber">${pendentes.length}</span>` : '', true);
+    const boxRecentes = UI.card('Atividades recentes', recentes.length
+      ? `<div class="lista-os">${recentes.map(o => linhaOS(o, UI.badgeStatus(o.status))).join('')}</div>`
+      : UI.vazio('Sem atividade no período', 'Nenhuma OS com os filtros atuais.'), '', true);
 
     const gEvolucao = UI.card('Serviços por período', semanas.length
       ? Chart.equalizador(semanas.map(s => ({
@@ -98,9 +127,9 @@ const Painel = (() => {
         rotulo: (v.nome || '—') + (v.placa && v.placa !== '—' ? ' ' + v.placa : ''), valor: e.valor,
         destaque: !!recPorVeic[e.chave],
         tip: `<strong>${Fmt.esc(v.nome)}</strong> · ${Fmt.esc(v.placa)}<br>${Fmt.money(e.valor)} em ${e.qtd} OS` +
-          (recPorVeic[e.chave] ? `<br>⚠️ ${recPorVeic[e.chave]} reincidência(s)` : '')
+          (recPorVeic[e.chave] ? `<br>Reincidência(s): ${recPorVeic[e.chave]}` : '')
       };
-    }), { aria: 'Gastos por veículo' }) + '<div class="legend"><span><i style="background:#C2721A"></i>com reincidência</span><span><i style="background:#3157CE"></i>sem reincidência</span></div>');
+    }), { aria: 'Gastos por veículo' }) + `<div class="legend"><span><i style="background:${Chart.AMBAR}"></i>com reincidência</span><span><i style="background:${Chart.AZUL}"></i>sem reincidência</span></div>`);
 
     const gServicos = UI.card('Gastos por tipo de serviço', Chart.barsH(grupos.slice(0, 10).map(g => ({
       rotulo: g.nome, valor: g.valor, cor: Chart.corCiano(g.nome),
@@ -142,9 +171,11 @@ const Painel = (() => {
         };
       }), { vazioT: 'Nenhuma reincidência', vazioM: 'Nenhum veículo voltou pelo mesmo sistema no período — bom sinal.' }), '', true);
 
-    // Ordem: KPIs → gráficos → "Atenção" (entre "Gastos por veículo" e "Veículos com maior custo") → rankings.
-    return kpis + `<div class="grid g2" style="margin-top:var(--s4)">${gEvolucao}${gServicos}</div>` +
+    // Ordem: KPIs (OS e frota) → gráficos → pendências e atividades → "Atenção" (entre "Gastos por veículo"
+    // e "Veículos com maior custo", como pedido) → rankings.
+    return kpis + `<div class="sec-t">Análise do período</div><div class="grid g2">${gEvolucao}${gServicos}</div>` +
       `<div class="grid g2" style="margin-top:var(--s4)">${gVeiculos}${gMecanicos}</div>` +
+      `<div class="sec-t">Acompanhamento</div><div class="grid g2">${boxPendentes}${boxRecentes}</div>` +
       (boxAlertas ? `<div style="margin-top:var(--s4)">${boxAlertas}</div>` : '') +
       `<div class="stack" style="margin-top:var(--s4)">${rankCusto}${rankRec}</div>`;
   }
@@ -155,6 +186,11 @@ const Painel = (() => {
       el.innerHTML = conteudo();
       Chart.ligarTooltips(el);
       el.querySelectorAll('[data-veic]').forEach(x => x.addEventListener('click', () => App.irPara('veiculo/' + x.dataset.veic)));
+      el.querySelectorAll('.lista-os [data-os]').forEach(x => {
+        const abrir = () => App.irPara('ordens/' + x.dataset.os);
+        x.addEventListener('click', abrir);
+        x.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+      });
     };
     Filtros.ligar(pintar); pintar();
     document.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => App.irPara(b.dataset.ir)));

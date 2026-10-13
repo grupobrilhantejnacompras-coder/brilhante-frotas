@@ -5,24 +5,20 @@
 /* ---------- Chart: gráficos SVG sem dependências ---------- */
 const Chart = (() => {
   // Série única = magnitude → uma cor só (a cor segue a entidade, nunca o ranking).
-  const AZUL = '#3157CE', AMBAR = '#C2721A', TRILHO = '#EEF2FF', CIANO = '#00D9FF';
-  const CAT = ['#3157CE', '#0D9488', '#C2721A', '#8B5CF6', '#0891B2', '#BE123C'];
-  // Família azul/ciano "command center" — para telas que pedem um visual monocromático com brilho
-  // (ex.: dashboard), em vez do arco-íris categórico do CAT acima.
-  const TONS_CIANO = ['#1677FF', '#00D9FF', '#5AA0FF', '#0B50BE', '#7DEEFF', '#0E63E6'];
-  function corCiano(chave) {
-    const s = String(chave || '');
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-    return TONS_CIANO[h % TONS_CIANO.length];
-  }
+  // Identidade v6.15: verde institucional como série única (os nomes AZUL/CIANO ficam por
+  // compatibilidade com o resto do código, mas hoje apontam para o verde da marca).
+  const AZUL = '#14513C', AMBAR = '#A8530B', TRILHO = '#EBF1EE', CIANO = '#14513C', OURO = '#B8924A';
+  // Categorias (rosca): verde, dourado, verde-claro, preto, ouro-escuro, sálvia — nunca arco-íris.
+  const CAT = ['#14513C', '#B8924A', '#5F8F7A', '#2D3833', '#8F6F2F', '#9DBFAF'];
+  // Série única = uma cor só; a cor não varia por nome (antes era sorteada por hash e não significava nada).
+  function corCiano() { return AZUL; }
   let tip;
   function tooltip() {
     if (!tip) {
       tip = document.createElement('div');
-      tip.style.cssText = 'position:fixed;z-index:300;background:#0F172A;color:#fff;padding:7px 11px;' +
+      tip.style.cssText = 'position:fixed;z-index:300;background:#08241B;color:#fff;padding:7px 11px;' +
         'border-radius:7px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .1s;' +
-        'box-shadow:0 4px 12px rgba(15,23,42,.25);max-width:230px;font-variant-numeric:tabular-nums';
+        'box-shadow:0 4px 12px rgba(8,36,27,.25);max-width:230px;font-weight:500;font-variant-numeric:tabular-nums';
       document.body.appendChild(tip);
     }
     return tip;
@@ -160,9 +156,8 @@ const Chart = (() => {
     return s + '</svg>';
   }
 
-  let eqSeq = 0;
-  /** Colunas finas e brilhantes, estilo "equalizador" — para séries longas ao longo do tempo
-   *  (mesma leitura de um gráfico de evolução, com visual mais tecnológico). pts: [{rotulo, valor, tip}]. */
+  /** Colunas finas, estilo "equalizador" — para séries longas ao longo do tempo
+   *  (mesma leitura de um gráfico de evolução). pts: [{rotulo, valor, tip}]. */
   function equalizador(pts, o = {}) {
     const fmt = o.fmt || Fmt.money0, cor = o.cor || CIANO;
     if (!pts.length) return vazio(o.vazio);
@@ -171,10 +166,7 @@ const Chart = (() => {
     const n = pts.length;
     const cw = (w - pl - pr) / n;
     const bw = Math.max(2, Math.min(14, cw - 2));
-    const gid = 'eqGrad' + (++eqSeq);
     let s = `<svg class="chart chart-v" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${Fmt.esc(o.aria || 'Evolução no período')}" style="color:${cor}">`;
-    s += `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">` +
-      `<stop offset="0%" stop-color="#8FF2FF"/><stop offset="55%" stop-color="${cor}"/><stop offset="100%" stop-color="#0B50BE"/></linearGradient></defs>`;
     for (let g = 0; g <= 2; g++) { const y = pt + (h - pt - pb) * g / 2; s += `<line class="gl" x1="0" x2="${w}" y1="${y}" y2="${y}"/>`; }
     s += `<line class="gl" x1="0" x2="${w}" y1="${h - pb}" y2="${h - pb}" style="opacity:.6"/>`;
     const passo = Math.max(1, Math.ceil(n / 9));
@@ -182,16 +174,16 @@ const Chart = (() => {
       const H = Math.max(2, (p.valor / max) * (h - pt - pb));
       const x = pl + i * cw + (cw - bw) / 2, y = h - pb - H;
       const r = Math.min(bw / 2, 4);
-      s += `<rect class="bar eq-bar fx-v" x="${x}" y="${y}" width="${bw}" height="${H}" rx="${r}" fill="url(#${gid})" style="transform:scaleY(0)"` +
+      s += `<rect class="bar eq-bar fx-v" x="${x}" y="${y}" width="${bw}" height="${H}" rx="${r}" fill="${cor}" style="transform:scaleY(0)"` +
         ` data-tip="${Fmt.esc(p.tip || (p.rotulo + ': ' + fmt(p.valor)))}"/>`;
       if (i % passo === 0 || i === n - 1)
         s += `<text x="${x + bw / 2}" y="${h - pb + 16}" text-anchor="middle" style="font-size:10px">${Fmt.esc(corta(p.rotulo, 8))}</text>`;
     });
-    // marcador pulsante no período mais recente — sensação de "monitoramento ao vivo"
+    // marcador dourado discreto no período mais recente
     const last = pts[n - 1];
     const Hl = Math.max(2, (last.valor / max) * (h - pt - pb));
     const xl = pl + (n - 1) * cw + cw / 2, yl = h - pb - Hl;
-    s += `<circle class="eq-live" cx="${xl}" cy="${(yl - 9).toFixed(1)}" r="3" fill="${cor}"><title>Período mais recente</title></circle>`;
+    s += `<circle class="eq-live" cx="${xl}" cy="${(yl - 9).toFixed(1)}" r="3" fill="${OURO}"><title>Período mais recente</title></circle>`;
     return s + '</svg>';
   }
 
@@ -212,7 +204,7 @@ const Chart = (() => {
     }
     // cor estável por categoria — "Freios" tem sempre a mesma cor, na rosca e nas barras;
     // "Outros" fica sempre em cinza neutro (não é uma categoria real).
-    const corDe = it => it.cor || (it.rotulo === 'Outros' ? '#94A3B8' : corCategoria(it.rotulo));
+    const corDe = it => it.cor || (it.rotulo === 'Outros' ? '#98A39D' : corCategoria(it.rotulo));
     const R = 70, CX = 90, CY = 90, SW = 26, C = 2 * Math.PI * R;
     let acc = 0;
     let s = `<svg class="chart donut" viewBox="0 0 180 180" role="img" aria-label="${Fmt.esc(o.aria || 'Gráfico de composição')}">`;
@@ -235,22 +227,36 @@ const Chart = (() => {
   }
 
   const corta = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
-  const vazio = m => `<div class="empty"><div class="d"></div><h3>Sem dados no período</h3><p class="dim">${Fmt.esc(m || 'Ajuste os filtros ou registre novas ordens de serviço.')}</p></div>`;
-  return { barsH, barsV, area, equalizador, donut, ligarTooltips, corCategoria, corCiano, CAT, AZUL, AMBAR, CIANO };
+  const vazio = m => `<div class="empty"><div class="d">${Ico.vazio}</div><h3>Sem dados no período</h3><p class="dim">${Fmt.esc(m || 'Ajuste os filtros ou registre novas ordens de serviço.')}</p></div>`;
+  return { barsH, barsV, area, equalizador, donut, ligarTooltips, corCategoria, corCiano, CAT, AZUL, AMBAR, CIANO, OURO };
 })();
 
 /* ---------- UI: blocos reutilizáveis ---------- */
 const UI = (() => {
-  const kpi = (lab, val, sub, alerta) =>
-    `<div class="card kpi${alerta ? ' alert' : ''}"><div class="k-lab">${Fmt.esc(lab)}</div>` +
-    `<div class="k-val">${val}</div>${sub ? `<div class="k-sub">${sub}</div>` : ''}</div>`;
+  /** KPI: rótulo, ícone discreto (opcional), número em destaque e legenda.
+   *  `alerta` aceita true (atenção) ou 'crit' | 'ok' | 'gold' para as outras cores semânticas. */
+  const kpi = (lab, val, sub, alerta, ico) => {
+    const cls = alerta === true ? ' alert' : (alerta ? ' ' + alerta : '');
+    return `<div class="card kpi${cls}"><div class="k-top"><div class="k-lab">${Fmt.esc(lab)}</div>` +
+      `${ico && Ico[ico] ? `<span class="k-ic" aria-hidden="true">${Ico[ico]}</span>` : ''}</div>` +
+      `<div class="k-val">${val}</div>${sub ? `<div class="k-sub">${sub}</div>` : ''}</div>`;
+  };
 
   const card = (titulo, corpo, acoes, semPad) =>
     `<section class="card">${titulo ? `<div class="card-h"><h2>${Fmt.esc(titulo)}</h2>${acoes || ''}</div>` : ''}` +
     `<div class="${semPad ? '' : 'card-b'}">${corpo}</div></section>`;
 
-  const vazio = (t, m, acao) =>
-    `<div class="empty"><div class="d"></div><h3>${Fmt.esc(t)}</h3><p>${Fmt.esc(m)}</p>${acao || ''}</div>`;
+  /** Estados visuais padronizados: 'vazio' (padrão), 'carregando', 'sucesso' e 'erro'. */
+  const estado = (tipo, t, m, acao) => {
+    const cls = { vazio: '', carregando: ' load', sucesso: ' ok', erro: ' err' }[tipo] || '';
+    const icone = tipo === 'carregando' ? '<span class="spinner" role="status" aria-label="Carregando"></span>'
+      : tipo === 'sucesso' ? Ico.ok : tipo === 'erro' ? Ico.erro : Ico.vazio;
+    return `<div class="empty${cls}"><div class="d">${icone}</div><h3>${Fmt.esc(t)}</h3>${m ? `<p>${Fmt.esc(m)}</p>` : ''}${acao || ''}</div>`;
+  };
+  const vazio = (t, m, acao) => estado('vazio', t, m, acao);
+  const carregando = (t, m) => estado('carregando', t || 'Carregando…', m);
+  const sucesso = (t, m, acao) => estado('sucesso', t, m, acao);
+  const erro = (t, m, acao) => estado('erro', t, m, acao);
 
   const badgeStatus = s => {
     const m = { 'Concluída': 'b-green', 'Aberta': 'b-blue', 'Em andamento': 'b-amber', 'Cancelada': 'b-red' };
@@ -277,7 +283,7 @@ const UI = (() => {
     bg.className = 'modal-bg'; bg.id = 'modal';
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${Fmt.esc(titulo)}"${largura ? ` style="max-width:${largura}"` : ''}>
       <div class="modal-h"><h2>${Fmt.esc(titulo)}</h2><div class="spacer"></div>
-        <button class="rm-btn" data-fechar aria-label="Fechar">✕</button></div>
+        <button class="rm-btn" data-fechar aria-label="Fechar">${Ico.fechar}</button></div>
       <div class="modal-b">${corpo}</div>
       ${rodape ? `<div class="modal-f">${rodape}</div>` : ''}</div>`;
     bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-fechar]')) fecharModal(); });
@@ -300,7 +306,7 @@ const UI = (() => {
     lista.map(v => { const val = v.v !== undefined ? v.v : v, tx = v.t !== undefined ? v.t : v;
       return `<option value="${Fmt.esc(val)}"${String(val) === String(sel) ? ' selected' : ''}>${Fmt.esc(tx)}</option>`; }).join('');
 
-  return { kpi, card, vazio, tabela, modal, fecharModal, toast, opcoes, badgeStatus };
+  return { kpi, card, vazio, estado, carregando, sucesso, erro, tabela, modal, fecharModal, toast, opcoes, badgeStatus };
 })();
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') UI.fecharModal(); });

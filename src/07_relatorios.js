@@ -188,7 +188,7 @@ const Relatorios = (() => {
 
       <div class="rep-sec"><h2>Quais veículos precisam de atenção</h2>
         ${alrt.length ? `<div class="stack" style="gap:8px">${alrt.map(a =>
-        `<div class="alert-box" style="padding:10px 14px"><span class="ic">⚠️</span><div>${a.txt}</div></div>`).join('')}</div>`
+        `<div class="alert-box" style="padding:10px 14px"><span class="ic">${Ico.alerta}</span><div>${a.txt}</div></div>`).join('')}</div>`
         : '<p class="dim">Nenhuma situação crítica identificada no período.</p>'}</div>
     </div>`;
   }
@@ -262,10 +262,10 @@ const Relatorios = (() => {
           rotulo: (v.nome || '—') + (v.placa && v.placa !== '—' ? ' ' + v.placa : ''), valor: e.valor,
           destaque: !!recPorPlaca[e.chave],
           tip: `<strong>${Fmt.esc(v.nome)}</strong> · ${Fmt.esc(v.placa)}<br>${Fmt.money(e.valor)} em ${e.qtd} OS` +
-            (recPorPlaca[e.chave] ? `<br>⚠️ ${recPorPlaca[e.chave]} reincidência(s)` : '')
+            (recPorPlaca[e.chave] ? `<br>Reincidência(s): ${recPorPlaca[e.chave]}` : '')
         };
       }), { aria: 'Veículos com maior custo' }) +
-      '<div class="legend"><span><i style="background:#C2721A"></i>com reincidência</span><span><i style="background:#3157CE"></i>sem reincidência</span></div>')}
+      `<div class="legend"><span><i style="background:${Chart.AMBAR}"></i>com reincidência</span><span><i style="background:${Chart.AZUL}"></i>sem reincidência</span></div>`)}
     </div>`;
 
     const tabVeic = UI.card('Veículos atendidos', UI.tabela(
@@ -285,10 +285,10 @@ const Relatorios = (() => {
       }), { total: { v: 'TOTAL', n: Fmt.num(os.length), t: Fmt.money(total) } }), '', true);
 
     const alrt = filtrado ? [] : Painel.alertas(os, b.ordens);
-    const boxAlertas = alrt.length ? `<section class="card" style="margin-top:var(--s4)"><div class="card-h"><h2>⚠️ Atenção</h2></div>
+    const boxAlertas = alrt.length ? `<section class="card" style="margin-top:var(--s4)"><div class="card-h"><h2><span class="ic">${Ico.alerta}</span>Atenção</h2></div>
       <div class="card-b"><div class="stack" style="gap:9px">${alrt.map(a =>
-        `<div class="row" style="gap:10px;align-items:flex-start">
-          <span class="badge ${a.nivel === 'alto' ? 'b-amber' : 'b-gray'}">${a.nivel === 'alto' ? 'Prioridade' : 'Observar'}</span>
+        `<div class="atn ${a.nivel === 'alto' ? 'crit' : 'warn'}">
+          <span class="badge ${a.nivel === 'alto' ? 'b-red' : 'b-amber'}">${a.nivel === 'alto' ? 'Prioridade' : 'Observar'}</span>
           <span style="flex:1;min-width:0">${a.txt}</span></div>`).join('')}</div></div></section>` : '';
 
     const tabRec = rec.length ? `<div style="margin-top:var(--s4)">${UI.card('Reincidências no período', UI.tabela(
@@ -307,7 +307,7 @@ const Relatorios = (() => {
       }), {}), '', true)}</div>` : '';
 
     const cabecalho = `<div class="card" style="padding:var(--s4) var(--s5);margin-bottom:var(--s4);display:flex;gap:var(--s4);align-items:center;flex-wrap:wrap">
-      <span class="logo" style="width:52px;color:var(--royal);flex:none">${LOGO_SVG}</span>
+      <span class="logo" style="width:52px;color:var(--brand);flex:none">${LOGO_SVG}</span>
       <div style="flex:1;min-width:200px"><div class="eyebrow" style="color:var(--royal)">Grupo Brilhante</div>
         <h2>Painel de manutenção de frotas</h2>
         <div class="dim" style="font-size:12.5px">Período: ${Fmt.date(st.de)} a ${Fmt.date(st.ate)} · ${todas.length} ordens de serviço</div></div>
@@ -405,7 +405,7 @@ const Relatorios = (() => {
     const passo = Math.max(1, Math.ceil(serie.length * 36 / 640));   // um rótulo a cada ~36px
     const muitas = serie.length > 12;
     const opcoes = (fmt, aria) => ({ fmt, aria, semValor: muitas, passoRotulo: passo });
-    const PARCIAL = '#8FA6E8';
+    const PARCIAL = '#B8924A';  // período em andamento / data futura: dourado discreto
     const itensValor = serie.map(b => ({
       rotulo: b.rotulo, valor: b.valor, cor: b.parcial ? PARCIAL : undefined,
       tip: `${b.longo}: ${Fmt.money(b.valor)} · ${b.qtd} OS` + (b.parcial ? ' (' + b.aviso + ')' : '')

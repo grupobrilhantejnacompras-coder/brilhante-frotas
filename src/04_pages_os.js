@@ -174,7 +174,7 @@ const Nova = (() => {
         </td>
         <td class="ta-r" data-l="Valor unit."><input type="number" inputmode="decimal" min="0" step="0.01" value="${it.valorUnit || ''}" data-c="valorUnit" aria-label="Valor unitário"></td>
         <td class="ta-r strong" data-l="Total"><span class="mono" data-tot>${Fmt.money(it.total)}</span></td>
-        <td class="act"><button type="button" class="rm-btn" data-rm="${i}" aria-label="Remover serviço">✕</button></td>
+        <td class="act"><button type="button" class="rm-btn" data-rm="${i}" aria-label="Remover serviço">${Ico.fechar}</button></td>
       </tr>`).join('') + '</tbody></table></div>';
   }
 
@@ -209,7 +209,7 @@ const Nova = (() => {
         <td class="ta-r nowrap">${Fmt.money(a.os.total)}</td>
         <td class="ta-r nowrap"><strong>${a.dias} dias</strong><br><span class="dim">${dkm}</span></td></tr>`;
     }).join('');
-    box.innerHTML = `<div class="alert-box"><span class="ic">⚠️</span><div style="flex:1;min-width:0">
+    box.innerHTML = `<div class="alert-box"><span class="ic">${Ico.alerta}</span><div style="flex:1;min-width:0">
       <h3>Possível reincidência</h3>
       <p style="margin-bottom:10px">Este veículo já esteve na oficina pelo mesmo sistema nos últimos ${DB.cfg().janelaReincidencia} dias.
       Confira o histórico antes de fechar a OS.</p>
@@ -513,7 +513,7 @@ const Ordens = (() => {
       vu: Fmt.money(i.valorUnit), t: `<span class="strong">${Fmt.money(i.total)}</span>`
     }));
     return `<div class="stack">
-      ${ant.length ? `<div class="alert-box"><span class="ic">⚠️</span><div>
+      ${ant.length ? `<div class="alert-box"><span class="ic">${Ico.alerta}</span><div>
         <h3>Reincidência identificada</h3>
         <p style="margin:0">Última ocorrência do mesmo sistema em ${Fmt.date(ant[0].os.data)} — há ${ant[0].dias} dias
         (${ant[0].grupos.map(Rec.nomeGrupo).join(', ')}), no valor de ${Fmt.money(ant[0].os.total)}.</p></div></div>` : ''}

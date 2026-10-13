@@ -18,6 +18,16 @@ const Ico = (() => {
     user: w('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>'),
     menu: w('<path d="M3 6h18M3 12h18M3 18h18"/>'),
     volta: w('<path d="M19 12H5M12 19l-7-7 7-7"/>'),
+    // estados e indicadores (mesmo traço dos demais ícones)
+    vazio: w('<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1z"/>'),
+    ok: w('<circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/>'),
+    erro: w('<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>'),
+    ordens: w('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 14l2 2 4-4"/>'),
+    dinheiro: w('<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.7"/><path d="M6 9.5h.01M18 14.5h.01"/>'),
+    grafico: w('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+    repetir: w('<path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>'),
+    fechar: w('<path d="M18 6 6 18M6 6l12 12"/>'),
+    relogio: w('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
   };
 })();
 
