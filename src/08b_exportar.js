@@ -267,9 +267,10 @@ iniciar();
 
   const CSS = String.raw`
 *{box-sizing:border-box}
-body{margin:0;background:#F1F4F9;color:#0F172A;font-family:'Inter','Segoe UI',system-ui,-apple-system,Arial,sans-serif;
+body{margin:0;background:#F1F4F9;color:#0F172A;font-family:'Montserrat',Arial,sans-serif;font-weight:400;
   font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
 h1,h2{margin:0;font-weight:700;letter-spacing:-.015em}
+h1{font-weight:800}
 .wrap{max-width:1180px;margin:0 auto;padding:24px}
 header.top{background:linear-gradient(105deg,#0C1F55,#1B3FAE);color:#fff;padding:26px 0}
 header.top .wrap{display:flex;align-items:center;gap:18px;padding-top:0;padding-bottom:0}
@@ -298,7 +299,7 @@ select,.btn{font:inherit;padding:8px 12px;border-radius:8px;border:1px solid #CB
 .kpi::after{content:"";position:absolute;top:-16px;right:-16px;width:34px;height:34px;background:#EEF2FF;transform:rotate(45deg)}
 .kpi.alert::after{background:#FEF3C7}
 .kpi .kl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:8px;position:relative}
-.kpi .kv{font-size:clamp(20px,1.85vw,26px);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.kpi .kv{font-size:clamp(18px,1.55vw,24px);font-weight:800;letter-spacing:-.025em;line-height:1.1}
 .kpi.alert .kv{color:#B45309}
 .kpi .ks{font-size:12px;color:#64748B;margin-top:5px}
 .alertas{display:flex;flex-direction:column;gap:9px;padding:16px}
@@ -342,6 +343,13 @@ footer.fim{padding:24px;text-align:center;color:#64748B;font-size:11.5px}
 @media (max-width:640px){.wrap{padding:16px}header.top .logo{width:44px}}
 `;
 
+  /* Tipografia da marca: reaproveita a Montserrat já embutida no sistema
+     (<style id="fonte-marca"> gerado pelo build.py) — sem segunda cópia no código. */
+  function fonteMarca() {
+    const el = document.getElementById('fonte-marca');
+    return el ? el.textContent : '';
+  }
+
   function html(dados) {
     const titulo = 'Painel de Manutenção de Frotas';
     return `<!DOCTYPE html>
@@ -349,6 +357,7 @@ footer.fim{padding:24px;text-align:center;color:#64748B;font-size:11.5px}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grupo Brilhante · ${titulo} · ${Fmt.date(dados.de)} a ${Fmt.date(dados.ate)}</title>
+<style>${fonteMarca()}</style>
 <style>${CSS}</style>
 </head><body>
 <header class="top"><div class="wrap">

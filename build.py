@@ -16,6 +16,17 @@ logo = (BASE / 'logo_min.svg').read_text(encoding='utf-8').strip()
 # funcionar tanto no site publicado quanto no arquivo único aberto local.
 favicon_b64 = base64.b64encode((BASE / 'favicon.png').read_bytes()).decode()
 
+# Tipografia oficial do Grupo Brilhante: Montserrat (variável, pesos 100–900,
+# subconjunto latino com acentos do português). Carregada UMA única vez aqui,
+# embutida no HTML: funciona no site publicado (sem liberar domínio externo na CSP)
+# e no arquivo único aberto direto no computador, inclusive sem internet.
+# Pesos e papéis de cada texto ficam nos tokens --fw-* de src/style.css.
+fonte_b64 = base64.b64encode((BASE / 'fontes' / 'Montserrat-latin-variable.woff2').read_bytes()).decode()
+fonte_css = ("@font-face{font-family:'Montserrat';font-style:normal;font-weight:100 900;"
+             "font-display:swap;src:url(data:font/woff2;base64," + fonte_b64 + ") format('woff2');"
+             "unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,"
+             "U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}")
+
 # Versão: string em VERSAO.txt (ex.: 5.1) + data da geração. Ajuste o arquivo ao publicar.
 vfile = BASE / 'VERSAO.txt'
 versao = vfile.read_text().strip() if vfile.exists() else '1'
@@ -36,6 +47,7 @@ html = f"""<!DOCTYPE html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Brilhante OS">
+<style id="fonte-marca">{fonte_css}</style>
 <style>
 {css}
 </style>
@@ -43,7 +55,7 @@ html = f"""<!DOCTYPE html>
 <body>
 <div id="root"></div>
 <div id="toasts" aria-live="polite"></div>
-<noscript><p style="padding:24px;font-family:sans-serif">Este sistema precisa de JavaScript ativado.</p></noscript>
+<noscript><p style="padding:24px;font-family:Montserrat,Arial,sans-serif">Este sistema precisa de JavaScript ativado.</p></noscript>
 <script>
 /* Logo institucional do Grupo Brilhante (vetorizada a partir do arquivo original). */
 window.APP_VERSAO = {{ n: "{versao}", data: "{data_br}" }};

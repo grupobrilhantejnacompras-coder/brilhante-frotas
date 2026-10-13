@@ -226,7 +226,7 @@ const Chart = (() => {
         ` data-tip="${Fmt.esc(it.tip || (it.rotulo + ': ' + fmt(it.valor) + ' (' + Math.round(frac * 100) + '%)'))}"><title>${Fmt.esc(it.rotulo)}</title></circle>`;
       acc += frac;
     });
-    s += `<text x="${CX}" y="${CY - 2}" text-anchor="middle" class="lbl-v" style="font-size:19px;font-weight:800">${fmt(total)}</text>`;
+    s += `<text x="${CX}" y="${CY - 2}" text-anchor="middle" class="lbl-v" style="font-size:19px;font-weight:var(--fw-display)">${fmt(total)}</text>`;
     s += `<text x="${CX}" y="${CY + 16}" text-anchor="middle" style="font-size:10px">${Fmt.esc(o.centro || 'total')}</text>`;
     s += '</svg>';
     const legenda = `<div class="legend">${itens.map(it =>
