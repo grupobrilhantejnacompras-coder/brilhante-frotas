@@ -36,6 +36,32 @@ mantido com esse nome para quem usa o sistema abrindo o arquivo direto no comput
 
 Ordem de concatenação e nomes dos módulos: ver `ORDEM` em `build.py`.
 
+## Tipografia (identidade visual)
+
+Fonte oficial: **Montserrat** — fallback `Montserrat, Arial, sans-serif`.
+
+* O arquivo da fonte fica em `fontes/Montserrat-latin-variable.woff2` (licença OFL em `fontes/`).
+* É carregada **uma única vez**, pelo `build.py`, embutida no HTML (`<style id="fonte-marca">`).
+  Assim funciona no site publicado e no arquivo aberto direto no computador, sem internet.
+  A CSP do `vercel.json` libera `font-src 'self' data:` para isso.
+* Pesos e papéis ficam centralizados nos tokens do topo de `src/style.css`:
+
+```
+Brand Typography
+├── Font Family: Montserrat        --font-marca
+├── Display / H1: 800              --fw-display
+├── H2 / H3 / números: 700         --fw-heading
+├── Subtitle: 600                  --fw-subtitle
+├── Body: 400                      --fw-body
+├── Body emphasis: 500/600         --fw-medium / --fw-emphasis
+├── Button: 600                    --fw-button
+├── Navigation: 600                --fw-nav
+└── Small text: 400/500            --fw-small
+```
+
+* Regra: nenhum outro arquivo declara `font-family` ou peso numérico — use os tokens.
+  O relatório HTML exportado (`08b_exportar.js`) reaproveita a mesma fonte embutida.
+
 ## Publicar na Vercel
 
 **Endereço oficial:** https://brilhante.vercel.app
