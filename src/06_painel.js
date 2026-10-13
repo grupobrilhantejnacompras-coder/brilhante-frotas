@@ -142,8 +142,10 @@ const Painel = (() => {
         };
       }), { vazioT: 'Nenhuma reincidência', vazioM: 'Nenhum veículo voltou pelo mesmo sistema no período — bom sinal.' }), '', true);
 
-    return kpis + boxAlertas + `<div class="grid g2" style="margin-top:var(--s4)">${gEvolucao}${gServicos}</div>` +
+    // Ordem: KPIs → gráficos → "Atenção" (entre "Gastos por veículo" e "Veículos com maior custo") → rankings.
+    return kpis + `<div class="grid g2" style="margin-top:var(--s4)">${gEvolucao}${gServicos}</div>` +
       `<div class="grid g2" style="margin-top:var(--s4)">${gVeiculos}${gMecanicos}</div>` +
+      (boxAlertas ? `<div style="margin-top:var(--s4)">${boxAlertas}</div>` : '') +
       `<div class="stack" style="margin-top:var(--s4)">${rankCusto}${rankRec}</div>`;
   }
 
