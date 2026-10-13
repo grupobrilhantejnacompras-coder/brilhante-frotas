@@ -28,7 +28,7 @@ const erros = [];
   await p.waitForSelector('.kpi');
   const kpis = await p.$$eval('.kpi', els => els.map(e => e.querySelector('.k-lab').textContent + '=' + e.querySelector('.k-val').textContent));
   console.log('   KPIs:', kpis.join(' | '));
-  ok('6 KPIs no dashboard', kpis.length === 6);
+  ok('7 KPIs no dashboard (4 de OS + 3 de frota)', kpis.length === 7);
   ok('gráficos renderizados', (await p.$$('svg.chart')).length >= 3);
   await p.screenshot({ path: 'shot-dashboard.png', fullPage: false });
 
