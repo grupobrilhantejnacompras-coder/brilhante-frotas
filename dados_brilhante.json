@@ -6157,7 +6157,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -6191,7 +6191,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -6459,7 +6459,7 @@
    "unidade": "KM",
    "local": "Rio Doce",
    "condutor": "Carlos",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -6493,7 +6493,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -6684,7 +6684,7 @@
    "unidade": "KM",
    "local": "Rio Preto",
    "condutor": "Sebastião",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -6718,7 +6718,7 @@
    "unidade": "KM",
    "local": "Barroso",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -6889,7 +6889,7 @@
    "unidade": "KM",
    "local": "Safra",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -6964,7 +6964,7 @@
    "unidade": "KM",
    "local": "Oficina",
    "condutor": "Ézio",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -7046,7 +7046,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -7353,7 +7353,7 @@
    "unidade": "KM",
    "local": "Casemat",
    "condutor": "Ademir",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -7544,7 +7544,7 @@
    "unidade": "KM",
    "local": "Pré-Moldado",
    "condutor": "Anilton",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -7619,7 +7619,7 @@
    "unidade": "KM",
    "local": "Casemat",
    "condutor": "Mauro",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -7646,7 +7646,7 @@
    "unidade": "KM",
    "local": "Fábrica de Ração",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -7700,7 +7700,7 @@
    "unidade": "KM",
    "local": "Rio Preto",
    "condutor": "Brutale",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -7931,7 +7931,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "Alex",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -8101,7 +8101,7 @@
    "unidade": "KM",
    "local": "Casemat",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -8455,7 +8455,7 @@
    "unidade": "KM",
    "local": "Casemat",
    "condutor": "Ademir",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -8714,7 +8714,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -8755,7 +8755,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -9027,7 +9027,7 @@
    "unidade": "KM",
    "local": "Barroso",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -9061,7 +9061,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -9102,7 +9102,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -9225,7 +9225,7 @@
    "unidade": "KM",
    "local": "Safra",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -9443,7 +9443,7 @@
    "unidade": "KM",
    "local": "Oficina",
    "condutor": "Reserva trato",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -9552,7 +9552,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -9586,7 +9586,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -9982,7 +9982,7 @@
    "unidade": "KM",
    "local": "Oficina",
    "condutor": "Reuner",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10030,7 +10030,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10071,7 +10071,7 @@
    "unidade": "KM",
    "local": "Árvore de Ouro",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10153,7 +10153,7 @@
    "unidade": "KM",
    "local": "Safra",
    "condutor": "Jaison",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10352,7 +10352,7 @@
    "unidade": "KM",
    "local": "Oficina",
    "condutor": "Reserva trato",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10510,7 +10510,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10537,7 +10537,7 @@
    "unidade": "KM",
    "local": "Casemat",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10605,7 +10605,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10646,7 +10646,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10673,7 +10673,7 @@
    "unidade": "KM",
    "local": "Barroso",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10700,7 +10700,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10727,7 +10727,7 @@
    "unidade": "KM",
    "local": "Safra",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10788,7 +10788,7 @@
    "unidade": "KM",
    "local": "Balsa",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10822,7 +10822,7 @@
    "unidade": "KM",
    "local": "Safra",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10870,7 +10870,7 @@
    "unidade": "KM",
    "local": "Rio Preto",
    "condutor": "Brutale",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10904,7 +10904,7 @@
    "unidade": "H",
    "local": "Oficina",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10931,7 +10931,7 @@
    "unidade": "KM",
    "local": "Safra",
    "condutor": "Julio",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10958,7 +10958,7 @@
    "unidade": "H",
    "local": "Safra",
    "condutor": "",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -10999,7 +10999,7 @@
    "unidade": "KM",
    "local": "Oficina",
    "condutor": "Regis",
-   "mecanico": "Equipe Ar Condicionado",
+   "mecanico": "Gemerson",
    "setor": "Ar Condicionado",
    "itens": [
     {
@@ -11437,7 +11437,7 @@
   "Ézio"
  ],
  "mecanicos": [
-  "Equipe Ar Condicionado",
+  "Gemerson",
   "Jeferson",
   "Vandame"
  ]

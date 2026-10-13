@@ -26,7 +26,7 @@ html = f"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0B3226">
+<meta name="theme-color" content="#292F73">
 <meta name="description" content="Sistema de ordens de serviço e gestão de manutenção de frotas do Grupo Brilhante.">
 <title>Grupo Brilhante · Ordens de Serviço de Frotas</title>
 <link rel="icon" href="data:image/png;base64,{favicon_b64}">

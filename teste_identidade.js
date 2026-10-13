@@ -1,4 +1,4 @@
-// v6.15 — identidade visual (verde-escuro / preto / branco / dourado, Montserrat) sem perder funcionalidade.
+// v6.15 — identidade visual (azul royal / cinza / branco / dourado discreto, Montserrat) sem perder funcionalidade.
 const { chromium } = require('playwright');
 const url = 'file://' + require('path').resolve(__dirname, 'Sistema_OS_Grupo_Brilhante.html');
 let falhas = 0; const erros = [];
@@ -12,11 +12,11 @@ const ROTAS = ['dashboard', 'nova-os', 'ordens', 'veiculos', 'servicos', 'relato
     p.on('pageerror', e => erros.push(nome + ': ' + e.message));
     p.on('console', m => { if (m.type() === 'error' && !/ERR_TUNNEL|Failed to load resource/.test(m.text())) erros.push(nome + ': ' + m.text()); });
     await p.goto(url); await p.waitForSelector('#form-login');
-    ok('login: faixa verde com logo', await p.evaluate(() => getComputedStyle(document.querySelector('.login-brand')).backgroundColor === 'rgb(11, 50, 38)'));
+    ok('login: faixa azul royal com logo', await p.evaluate(() => getComputedStyle(document.querySelector('.login-brand')).backgroundColor === 'rgb(41, 47, 115)'));
     await p.fill('#u', 'Kamau'); await p.fill('#s', '159753'); await p.click('button[type=submit]');
     await p.waitForSelector('#painel h2', { timeout: 8000 }); await p.waitForTimeout(3300);
     ok('Montserrat carregada e aplicada', await p.evaluate(async () => { await document.fonts.ready; return document.fonts.check('700 14px Montserrat') && /Montserrat/.test(getComputedStyle(document.body).fontFamily); }));
-    ok('fundo do menu lateral verde-escuro', await p.evaluate(() => getComputedStyle(document.querySelector('.nav')).backgroundColor === 'rgb(8, 36, 27)'));
+    ok('fundo do menu lateral azul royal escuro', await p.evaluate(() => getComputedStyle(document.querySelector('.nav')).backgroundColor === 'rgb(31, 37, 87)'));
     ok('item do menu selecionado destacado', await p.evaluate(() => !!document.querySelector('.nav-item.on') && getComputedStyle(document.querySelector('.nav-item.on'), '::before').backgroundColor === 'rgb(184, 146, 74)'));
     ok('7 KPIs com ícone', await p.evaluate(() => document.querySelectorAll('#painel .kpi .k-ic svg').length === 7));
     const titulos = await p.$$eval('#painel h2', hs => hs.map(h => h.textContent.trim()));
