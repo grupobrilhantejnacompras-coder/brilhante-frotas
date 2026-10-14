@@ -22,7 +22,7 @@ const erros = [];
   console.log('— Mecânicos responsáveis —');
   const nomes = await p.$$eval('#mec-resp [data-mec]', e => e.map(x => x.value));
   console.log('   opções:', nomes.join(', '));
-  ok('seis nomes exatos', JSON.stringify(nomes) === JSON.stringify(['Jefesson', 'Allan', 'Gemerson', 'Vandame', 'Tião', 'Oficina Safra']));
+  ok('seis nomes exatos', JSON.stringify(nomes) === JSON.stringify(['Jeferson', 'Allan', 'Gemerson', 'Vandame', 'Tião', 'Oficina Safra']));
 
   // não salva sem responsável
   const sv = await p.evaluate(() => DB.get().servicos.find(s => /pastilha/i.test(s.descricao)));
@@ -31,14 +31,14 @@ const erros = [];
   ok('bloqueia sem responsável', (await p.textContent('#toasts')).includes('mecânico responsável'));
 
   // marca dois
-  await p.check('#mec-resp input[value="Jefesson"]');
+  await p.check('#mec-resp input[value="Jeferson"]');
   await p.check('#mec-resp input[value="Tião"]');
   await p.waitForTimeout(200);
   await p.click('button[type=submit]'); await p.waitForTimeout(900);
   const o = await p.evaluate(() => { const b = DB.get().ordens; return b[b.length - 1]; });
   console.log('   gravado:', JSON.stringify({ resp: o.responsaveis, mec: o.mecanico, por: o.criadoPor, data: o.criadoData, hora: o.criadoHora }));
   ok('dois responsáveis gravados', Array.isArray(o.responsaveis) && o.responsaveis.length === 2 && o.responsaveis.includes('Tião'));
-  ok('mecanico texto = junção (compat. relatórios)', o.mecanico === 'Jefesson, Tião');
+  ok('mecanico texto = junção (compat. relatórios)', o.mecanico === 'Jeferson, Tião');
 
   console.log('— Auditoria de criação —');
   ok('registrado por Kamau', o.criadoPor === 'Kamau');

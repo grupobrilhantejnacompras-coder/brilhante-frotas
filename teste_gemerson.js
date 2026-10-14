@@ -1,4 +1,4 @@
-// v6.16: "Equipe Ar Condicionado" e Gemerson são a mesma pessoa — todas as O.S. passam para o Gemerson
+// v6.16/6.17: "Equipe Ar Condicionado" = Gemerson e "Jefesson" = Jeferson (mesmas pessoas) — todas as O.S. passam para o nome certo
 // (semente, base local, nuvem e backups). Testa a migração local e o ciclo com a nuvem (Supabase simulado).
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -26,7 +26,11 @@ const login = async p => { await p.waitForSelector('#form-login, #painel h2'); i
     d.ordens.filter(o => o.mecanico === 'Gemerson').slice(0, 10).forEach(o => { o.mecanico = OLD; });
     d.ordens.filter(o => o.mecanico === 'Gemerson').slice(0, 2).forEach(o => { o.mecanico = 'Jeferson, ' + OLD.toUpperCase(); });
     d.ordens.find(o => o.mecanico === 'Jeferson').mecanico = 'Equipe Ar Condicionado ';
-    d.mecanicos = ['Gemerson', 'Jeferson', OLD, 'Vandame'];
+    const js = d.ordens.filter(o => o.mecanico === 'Jeferson');
+    js.slice(0, 3).forEach(o => { o.mecanico = 'Jefesson'; });
+    js.slice(3, 5).forEach(o => { o.mecanico = 'Jefesson, Allan'; });
+    js[5].mecanico = 'Jefesson, Jeferson';
+    d.mecanicos = ['Gemerson', 'Jeferson', 'Jefesson', OLD, 'Vandame'];
     localStorage.setItem(k, JSON.stringify(d));
   }, OLD);
   await p.reload(); await login(p);
@@ -34,20 +38,25 @@ const login = async p => { await p.waitForSelector('#form-login, #painel h2'); i
     const d = DB.get();
     return { velhos: d.ordens.filter(o => /equipe ar/i.test(o.mecanico || '')).length, total: d.ordens.length,
       gem: d.ordens.filter(o => o.mecanico === 'Gemerson').length, lista: d.mecanicos, dupla: d.ordens.filter(o => o.mecanico === 'Jeferson, Gemerson').length,
-      ocorrenciasVelhasNaLista: d.mecanicos.filter(m => m === OLD).length };
+      ocorrenciasVelhasNaLista: d.mecanicos.filter(m => m === OLD).length,
+      jefesson: d.ordens.filter(o => /jefesson/i.test(o.mecanico || '')).length, jefAllan: d.ordens.filter(o => o.mecanico === 'Jeferson, Allan').length,
+      jefDup: d.ordens.filter(o => o.mecanico === 'Jeferson').length, listaTemJefesson: d.mecanicos.includes('Jefesson'), jeferson1x: d.mecanicos.filter(m => m === 'Jeferson').length };
   }, OLD);
   ok('migração local: nenhuma O.S. restou na Equipe Ar Condicionado', r.velhos === 0);
   ok('migração local: total de O.S. preservado (' + total + ')', r.total === total);
   ok('migração local: Gemerson ficou com as 45 (+1 que era "Equipe… " com espaço)', r.gem >= 43 && r.gem <= 46);
   ok('lista de mecânicos sem a Equipe e sem duplicar o Gemerson', r.ocorrenciasVelhasNaLista === 0 && r.lista.filter(m => m === 'Gemerson').length === 1);
   ok('OS com vários responsáveis: "Jeferson, Gemerson" (sem repetir)', r.dupla === 2);
+  ok('Jefesson: nenhuma O.S. restou, nem na lista de mecânicos', r.jefesson === 0 && !r.listaTemJefesson);
+  ok('Jefesson: "Jefesson, Allan" virou "Jeferson, Allan"; "Jefesson, Jeferson" virou só Jeferson', r.jefAllan === 2 && r.jefDup >= 4 && r.jeferson1x === 1);
   const painel = await p.$$eval('#painel h2', hs => hs.map(h => h.textContent.trim()));
   ok('painel abre sem erros', painel.length > 3);
 
   /* 2) nuvem (simulada): vem com o nome antigo e o app regrava com Gemerson */
   const ctx2 = await b.newContext({ viewport: { width: 1280, height: 900 } });
   // a nuvem guarda TODAS as O.S. (como em produção), as 45 do ar-condicionado ainda com o nome antigo
-  const remotas = seed.ordens.map((o, i) => ({ id: 'P' + (i + 1), numero: o.numero, data: o.data, veiculo_id: o.veiculoId, placa: o.placa, frota: o.frota, local: o.local, condutor: o.condutor, mecanico: o.mecanico === 'Gemerson' ? OLD : o.mecanico, km_h: o.kmH, tipo_medidor: null, obs: o.obs || null, itens: o.itens, total: o.total, criado_por: null, criado_data: null, criado_hora: null, alterado_por: null, alterado_data: null, alterado_hora: null }));
+  let nj = 0;
+  const remotas = seed.ordens.map((o, i) => ({ id: 'P' + (i + 1), numero: o.numero, data: o.data, veiculo_id: o.veiculoId, placa: o.placa, frota: o.frota, local: o.local, condutor: o.condutor, mecanico: o.mecanico === 'Gemerson' ? OLD : (o.mecanico === 'Jeferson' && ++nj <= 7 ? 'Jefesson' : o.mecanico), km_h: o.kmH, tipo_medidor: null, obs: o.obs || null, itens: o.itens, total: o.total, criado_por: null, criado_data: null, criado_hora: null, alterado_por: null, alterado_data: null, alterado_hora: null }));
   const posts = [];
   await ctx2.route(/supabase\.co\/rest\/v1\/ordens/, async rt => {
     const q = rt.request();
@@ -60,20 +69,23 @@ const login = async p => { await p.waitForSelector('#form-login, #painel h2'); i
   await p2.goto(path); await login(p2); await p2.waitForTimeout(1500);
   const cloud = await p2.evaluate(() => DB.get().ordens.map(o => ({ id: o.id, m: o.mecanico })));
   ok('nuvem → app: as 45 viraram Gemerson localmente e nenhuma ficou na Equipe', cloud.filter(o => o.m === 'Gemerson').length === 45 && !cloud.some(o => /equipe ar/i.test(o.m || '')));
+  ok('nuvem → app: as 7 do Jefesson viraram Jeferson', !cloud.some(o => /jefesson/i.test(o.m || '')) && cloud.filter(o => o.m === 'Jeferson').length === 155);
   const enviadas = posts.flat();
-  ok('app → nuvem: reenviou exatamente as 45 O.S. alteradas, já como Gemerson', enviadas.length === 45 && enviadas.every(l => l.mecanico === 'Gemerson'));
-  ok('app → nuvem: não reenviou as que não mudaram', enviadas.length === 45 && !enviadas.some(l => l.mecanico !== 'Gemerson'));
+  ok('app → nuvem: reenviou exatamente as 52 O.S. alteradas (45 + 7), já com o nome certo', enviadas.length === 52 && enviadas.filter(l => l.mecanico === 'Gemerson').length === 45 && enviadas.filter(l => l.mecanico === 'Jeferson').length === 7);
+  ok('app → nuvem: não reenviou as que não mudaram', enviadas.length === 52 && !enviadas.some(l => !['Gemerson', 'Jeferson'].includes(l.mecanico)));
 
   /* 3) importar backup antigo (mesclar) já normaliza */
   const aviso = await p2.evaluate(OLD => {
     const bk = JSON.parse(JSON.stringify(DB.get()));
     const o = JSON.parse(JSON.stringify(bk.ordens[0])); o.id = 'ZZ1'; o.numero = 99999; o.data = '2026-01-02'; o.mecanico = OLD; o.total = 7.77;
-    bk.ordens = [o]; bk.mecanicos = [OLD];
+    const o2 = JSON.parse(JSON.stringify(bk.ordens[1])); o2.id = 'ZZ2'; o2.numero = 99998; o2.data = '2026-01-03'; o2.mecanico = 'Jefesson'; o2.total = 8.88;
+    bk.ordens = [o, o2]; bk.mecanicos = [OLD, 'Jefesson'];
     const r = DB.importarBackup(bk, 'mesclar');
     const c = DB.get().ordens.find(x => x.total === 7.77);
-    return { r, mec: c && c.mecanico, lista: DB.get().mecanicos };
+    const c2 = DB.get().ordens.find(x => x.total === 8.88);
+    return { r, mec: c && c.mecanico, mec2: c2 && c2.mecanico, lista: DB.get().mecanicos };
   }, OLD);
-  ok('backup antigo mesclado entra como Gemerson', aviso.mec === 'Gemerson' && !aviso.lista.includes(OLD));
+  ok('backup antigo mesclado entra como Gemerson / Jeferson', aviso.mec === 'Gemerson' && aviso.mec2 === 'Jeferson' && !aviso.lista.includes(OLD) && !aviso.lista.includes('Jefesson'));
   ok('sem erros de página', erros.length === 0);
   if (erros.length) console.log(erros);
   await b.close(); console.log(falhas ? falhas + ' FALHA(S)' : 'TUDO OK'); process.exit(falhas ? 1 : 0);

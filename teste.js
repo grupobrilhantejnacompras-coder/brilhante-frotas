@@ -58,7 +58,7 @@ const erros = [];
 
   await p.fill('#f-local', 'Oficina');
   await p.fill('#f-condutor', 'Sebastião');
-  await p.check('#mec-resp input[value="Jefesson"]');
+  await p.check('#mec-resp input[value="Jeferson"]');
   await p.fill('#f-km', '190000');
 
   // item 1: serviço do catálogo (freio -> deve disparar reincidência)

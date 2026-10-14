@@ -22,7 +22,7 @@ const erros = [];
   console.log('\n— Cabeçalho —');
   ok('data preenchida automaticamente', !!(await p.inputValue('#f-data')));
   await p.fill('#f-local', 'Oficina Central');
-  await p.check('#mec-resp input[value="Jefesson"]');
+  await p.check('#mec-resp input[value="Jeferson"]');
   await p.fill('#f-condutor', 'Sebastião');
   await p.fill('#f-veic', 'QMS4G35'); await p.dispatchEvent('#f-veic', 'change');
   await p.waitForTimeout(500);
