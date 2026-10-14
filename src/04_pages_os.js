@@ -91,7 +91,7 @@ const Nova = (() => {
     return os;
   }
   const linhaVazia = () => ({ qtd: 1, servicoCod: '', descricao: '', valorUnit: 0, total: 0 });
-  const MECANICOS_FIXOS = ['Jefesson', 'Allan', 'Gemerson', 'Vandame', 'Tião', 'Oficina Safra'];
+  const MECANICOS_FIXOS = ['Jeferson', 'Allan', 'Gemerson', 'Vandame', 'Tião', 'Oficina Safra'];
 
   function pagina(params) {
     const b = DB.get();

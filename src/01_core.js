@@ -198,11 +198,12 @@ const DB = (() => {
     save();
     return d;
   }
-  /* Equipe Ar Condicionado e Gemerson são a mesma pessoa: tudo que estava
-     lançado na "Equipe Ar Condicionado" passa a ser do Gemerson. Idempotente
+  /* Nomes que são a mesma pessoa: "Equipe Ar Condicionado" → Gemerson e
+     "Jefesson" (grafia errada que existia na lista de mecânicos) → Jeferson.
+     Tudo que estava lançado no nome antigo passa para o certo. Idempotente
      (pode rodar a cada carga) e devolve só as O.S. que mudaram, para o
      sincronismo reenviá-las à nuvem. */
-  const MECANICOS_RENOMEADOS = { 'equipe ar condicionado': 'Gemerson' };
+  const MECANICOS_RENOMEADOS = { 'equipe ar condicionado': 'Gemerson', 'jefesson': 'Jeferson' };
   const chaveMec = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
   function nomeMecanico(texto) {
     const parte = String(texto == null ? '' : texto);
