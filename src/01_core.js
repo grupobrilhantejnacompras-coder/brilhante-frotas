@@ -295,7 +295,31 @@ const DB = (() => {
   const nomeVeiculo = id => { const v = veiculo(id); return v ? v.nome : '—'; };
   const rotuloVeiculo = id => { const v = veiculo(id); return v ? v.nome + (v.placa !== '—' ? ' · ' + v.placa : '') : '—'; };
 
-  function proximoNumero() { return get().ordens.reduce((m, o) => Math.max(m, o.numero || 0), 0) + 1; }
+  // Maior número de O.S. já visto na nuvem (outros computadores): o próximo número nunca fica abaixo dele.
+  let maxNuvem = 0;
+  const lembrarMaxNuvem = n => { if (Number(n) > maxNuvem) maxNuvem = Number(n); };
+  const maiorNumero = () => get().ordens.reduce((m, o) => Math.max(m, o.numero || 0), 0);
+  function proximoNumero() { return Math.max(maiorNumero(), maxNuvem) + 1; }
+
+  /* Números de O.S. repetidos: a mais antiga (pela data da O.S.) mantém o número; as outras ganham
+     números novos, em ordem de data, acima do maior número existente. Só calcula — não grava. */
+  function propostaRenumeracao() {
+    const grupos = new Map();
+    get().ordens.forEach(o => { if (o.numero == null || o.numero === '') return; const k = String(o.numero); (grupos.get(k) || grupos.set(k, []).get(k)).push(o); });
+    const chave = o => (o.data || '9999-12-31') + ' ' + (o.criadoHora || '') + '|' + o.id;
+    let max = Math.max(maiorNumero(), maxNuvem);
+    const lista = [];
+    [...grupos.entries()].filter(([, l]) => l.length > 1).sort((a, b) => a[0] - b[0]).forEach(([n, l]) => {
+      l.sort((x, y) => chave(x).localeCompare(chave(y)));
+      l.slice(1).forEach(o => lista.push({ os: o, de: o.numero, para: 0 }));
+    });
+    lista.sort((a, b) => chave(a.os).localeCompare(chave(b.os))).forEach(m => { m.para = ++max; });
+    return lista;
+  }
+  function aplicarRenumeracao(lista) {
+    lista.forEach(m => { const o = get().ordens.find(x => x.id === m.os.id); if (o) o.numero = m.para; });
+    save();
+  }
 
   function salvarOS(os) {
     const b = get();
@@ -452,7 +476,7 @@ const DB = (() => {
 
   return {
     get, load, save, normalizarMecanicos, nomeMecanico, veiculo, servico, nomeVeiculo, rotuloVeiculo, salvarOS, excluirOS,
-    salvarVeiculo, salvarServico, proximoNumero, restaurar, exportarJSON,
+    salvarVeiculo, salvarServico, proximoNumero, lembrarMaxNuvem, maiorNumero, propostaRenumeracao, aplicarRenumeracao, restaurar, exportarJSON,
     lerBackup, conferirBackup, importarBackup,
     usuarios, usuarioPorLogin, salvarUsuario, excluirUsuario,
     cfg: () => get().config,

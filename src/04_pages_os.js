@@ -95,6 +95,9 @@ const Nova = (() => {
 
   function pagina(params) {
     const b = DB.get();
+    if (!(params && params.id)) {   // o número provisório passa a considerar o maior número da nuvem assim que ela responde
+      try { Nuvem.atualizarMaximo().then(() => { if (os && !os.id && Estado.pagina === 'nova-os' && os.numero < DB.proximoNumero()) { os.numero = DB.proximoNumero(); App.acoesTopo(`<span class="badge b-blue">OS Nº ${os.numero}</span>`); } }); } catch (e) { }
+    }
     if (params && params.id) {
       const orig = b.ordens.find(o => o.id === params.id);
       limpar(orig ? JSON.parse(JSON.stringify(orig)) : null);

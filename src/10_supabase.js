@@ -4,7 +4,9 @@
    qualquer computador. O localStorage continua como reserva
    offline: se a internet cair, o app segue funcionando e
    sincroniza quando a conexão voltar.
-   (Login, usuários, veículos e serviços seguem locais.)
+   Desde a v6.20 o cadastro de veículos também é espelhado na nuvem
+   (tabela "veiculos") e a numeração das O.S. é protegida contra repetição.
+   (Serviços seguem locais.)
    ============================================================ */
 const Nuvem = (() => {
   const URL = 'https://ysszhioygqyjbcgjgpca.supabase.co';
@@ -67,7 +69,39 @@ const Nuvem = (() => {
   async function baixarTodas() {
     const linhas = await (await req('ordens?select=*')).json();
     if (linhas.length) colStatus = ('status' in linhas[0]);   // a nuvem mostra se tem a coluna
+    linhas.forEach(l => DB.lembrarMaxNuvem(l.numero));        // o próximo número nunca fica abaixo do que já existe na nuvem
     return linhas.map(paraOS);
+  }
+  // Consulta leve do maior número de O.S. na nuvem (usada ao abrir "Nova OS" e antes de numerar).
+  async function atualizarMaximo() {
+    try {
+      const l = await (await req('ordens?select=numero&numero=not.is.null&order=numero.desc&limit=1', {}, 5000)).json();
+      if (l[0]) DB.lembrarMaxNuvem(l[0].numero);
+      return l[0] ? Number(l[0].numero) : 0;
+    } catch (e) { return null; }
+  }
+  // O número já está em uso por OUTRA O.S. na nuvem? (lança erro se estiver offline)
+  async function numeroEmUso(os) {
+    const l = await (await req('ordens?select=id&numero=eq.' + encodeURIComponent(os.numero) + '&id=neq.' + encodeURIComponent(os.id) + '&limit=1', {}, 6000)).json();
+    return l.length > 0;
+  }
+  function renumerar(os) {
+    const de = os.numero; os.numero = DB.proximoNumero(); DB.save();
+    try { UI.toast('O número ' + de + ' já estava em uso em outro computador. Esta OS foi salva como Nº ' + os.numero + '.', 'warn'); } catch (e) { }
+    return os.numero;
+  }
+  /* Envia uma O.S. NOVA garantindo número único: confere antes e, se houver conflito
+     (ou se o banco recusar por índice único — HTTP 409), pega o próximo número livre. */
+  async function enviarNova(os) {
+    for (let t = 0; t < 5; t++) {
+      if (!(await numeroEmUso(os))) {
+        try { await enviarUma(os); return; }
+        catch (e) { if (!/ 409$/.test(e.message)) throw e; }
+      }
+      await atualizarMaximo();
+      renumerar(os);
+    }
+    throw new Error('numeracao');
   }
 
   function marcadas() { return new Set(DB.get().sincronizados || []); }
@@ -95,16 +129,38 @@ const Nuvem = (() => {
       o.status = (locaisPorId.get(o.id) || {}).status || 'Concluída';
       semStatusNaNuvem.push(o);
     });
+    // Veículos: cadastro compartilhado entre os computadores (antes das O.S., para a categoria já valer).
+    try { await sincronizarVeiculos(); } catch (e) { }
     const idsRemotos = new Set(remotas.map(o => o.id));
     const jaSync = marcadas();
     // sobe as locais nunca sincronizadas
     const subir = base.ordens.filter(o => !idsRemotos.has(o.id) && !jaSync.has(o.id));
-    if (subir.length) { try { await enviarVarias(subir); } catch (e) { online = false; } }
-    // base final = remotas + as que acabaram de subir
+    // O.S. feitas offline podem ter pego um número que outro computador já usou: renumera ANTES de subir.
+    // Regra: quem já está na nuvem mantém o número; entre as novas, a mais antiga (pela data) mantém.
+    if (subir.length) {
+      const usados = new Set(remotas.map(o => String(o.numero)));
+      let max = Math.max(DB.maiorNumero(), ...remotas.map(o => Number(o.numero) || 0));
+      let mudouNum = false;
+      [...subir].sort((a, b) => ((a.data || '') + (a.criadoHora || '') + a.id).localeCompare((b.data || '') + (b.criadoHora || '') + b.id)).forEach(o => {
+        if (o.numero != null && o.numero !== '' && !usados.has(String(o.numero))) { usados.add(String(o.numero)); return; }
+        o.numero = ++max; usados.add(String(o.numero)); mudouNum = true;
+      });
+      if (mudouNum) DB.lembrarMaxNuvem(max);
+    }
+    let subiram = [];
+    if (subir.length) {
+      try { await enviarVarias(subir); subiram = subir; }
+      catch (e) {
+        // um bloco falhou (offline ou número recusado pelo banco): tenta uma a uma; o que não subir fica pendente.
+        for (const o of subir) { try { await enviarNova(o); subiram.push(o); } catch (e2) { online = false; } }
+      }
+    }
+    // base final = remotas + as locais (as que não subiram continuam locais, pendentes para a próxima vez)
     const mapa = new Map(remotas.map(o => [o.id, o]));
     subir.forEach(o => { if (!mapa.has(o.id)) mapa.set(o.id, o); });
     base.ordens = [...mapa.values()];
-    base.sincronizados = [...mapa.keys()];
+    const pendentes = new Set(subir.filter(o => !subiram.includes(o)).map(o => o.id));
+    base.sincronizados = [...mapa.keys()].filter(id => !pendentes.has(id));
     // "Equipe Ar Condicionado" → Gemerson (mesma pessoa): corrige o que veio da nuvem
     // e grava de volta lá; se falhar (offline), a próxima sincronização tenta de novo.
     const renomeadas = DB.normalizarMecanicos(base);
@@ -123,8 +179,78 @@ const Nuvem = (() => {
   }
 
   // Chamados em segundo plano ao salvar/excluir uma O.S.
-  function aoSalvar(os) { marcar([os.id], true); enviarUma(os).catch(() => marcar([os.id], false)); }
+  // O.S. nova (ainda não marcada como sincronizada) passa pela conferência de número único.
+  function aoSalvar(os) {
+    const nova = !marcadas().has(os.id);
+    marcar([os.id], true);
+    (nova ? enviarNova(os) : enviarUma(os)).catch(() => marcar([os.id], false));
+  }
   function aoExcluir(id) { apagarUma(id).catch(() => {}); }
+
+  /* ---------- Veículos (cadastro compartilhado) ----------
+     Tabela "veiculos" (ver supabase_v620.sql). Se ela ainda não existir, nada muda:
+     o cadastro segue local e o app funciona como antes. */
+  let veicNuvem = null;                                        // null = não sei; true = tabela existe; false = não existe
+  const veicParaLinha = v => ({ id: v.id, nome: v.nome || null, placa: v.placa || null, tipo: v.tipo || null, dados: v, atualizado_em: new Date().toISOString() });
+  const linhaParaVeic = l => {
+    const d = (l.dados && typeof l.dados === 'object') ? l.dados : {};
+    const v = Object.assign({}, d, { id: l.id });
+    if (v.nome == null && l.nome != null) v.nome = l.nome;
+    if (v.placa == null && l.placa != null) v.placa = l.placa;
+    if (v.tipo == null && l.tipo != null) v.tipo = l.tipo;
+    return v;
+  };
+  const canon = v => JSON.stringify(Object.keys(v).sort().map(k => [k, v[k]]));
+  // mescla um veículo local com o da nuvem: a nuvem vale, exceto o KM/H, onde vale o mais recente.
+  function mesclarVeic(l, r) {
+    const m = Object.assign({}, l, r);
+    const lNovo = l.kmAtual != null && (r.kmAtual == null || (l.kmAtualData || '') > (r.kmAtualData || '') ||
+      ((l.kmAtualData || '') === (r.kmAtualData || '') && Number(l.kmAtual) > Number(r.kmAtual)));
+    if (lNovo) { m.kmAtual = l.kmAtual; m.kmAtualData = l.kmAtualData; }
+    return { m, localMaisNovo: lNovo };
+  }
+  async function postarVeiculos(lista) {
+    for (let i = 0; i < lista.length; i += 100)
+      await req('veiculos', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(lista.slice(i, i + 100).map(veicParaLinha)) }, 12000);
+  }
+  function pendenciaVeic(ids, incluir) {
+    const b = DB.get(); const s = new Set(b.veiculosPendentes || []);
+    ids.forEach(id => incluir ? s.add(id) : s.delete(id));
+    b.veiculosPendentes = [...s]; DB.save();
+  }
+  /* Une o cadastro local ao da nuvem: o que só existe na nuvem entra; o que só existe aqui sobe;
+     edições feitas aqui e ainda não enviadas não são sobrescritas. Devolve true se o local mudou. */
+  async function sincronizarVeiculos() {
+    let linhas;
+    try { linhas = await (await req('veiculos?select=*&limit=5000', {}, 10000)).json(); veicNuvem = true; }
+    catch (e) { if (/ (400|404)$/.test(e.message)) veicNuvem = false; return false; }
+    const b = DB.get();
+    const pend = new Set(b.veiculosPendentes || []);
+    const remotos = new Map(linhas.map(l => [l.id, linhaParaVeic(l)]));
+    const idxLocal = new Map(b.veiculos.map((v, i) => [v.id, i]));
+    let mudou = false; const subir = [];
+    remotos.forEach((r, id) => {
+      if (!idxLocal.has(id)) { b.veiculos.push(r); mudou = true; return; }
+      const i = idxLocal.get(id), l = b.veiculos[i];
+      if (pend.has(id)) { subir.push(l); return; }
+      const { m, localMaisNovo } = mesclarVeic(l, r);
+      if (canon(m) !== canon(l)) { b.veiculos[i] = m; mudou = true; }
+      if (localMaisNovo) subir.push(m);
+    });
+    b.veiculos.forEach(v => { if (!remotos.has(v.id)) subir.push(v); });
+    if (mudou) DB.save();
+    if (subir.length) {
+      try { await postarVeiculos(subir); pendenciaVeic(subir.map(v => v.id), false); }
+      catch (e) { /* tenta de novo na próxima sincronização */ }
+    }
+    return mudou;
+  }
+  // Ao cadastrar/editar um veículo (ou quando o KM/H dele muda por uma O.S.): envia em segundo plano.
+  function aoSalvarVeiculo(v) {
+    pendenciaVeic([v.id], true);
+    if (veicNuvem === false) return;
+    postarVeiculos([v]).then(() => pendenciaVeic([v.id], false)).catch(() => { });
+  }
 
   /* ---------- Usuários (login, cadastro e permissões) ----------
      A senha nunca trafega em texto puro fora do RPC (que a transforma em
@@ -199,6 +325,8 @@ const Nuvem = (() => {
   return {
     sincronizar, aoSalvar, aoExcluir, get online() { return online; },
     get ultimaSync() { return ultimaSync; }, statusNaNuvem: () => colStatus,
+    sincronizarVeiculos, aoSalvarVeiculo, statusVeiculosNuvem: () => veicNuvem,
+    atualizarMaximo, enviarOrdens: enviarVarias,
     sincronizarUsuarios, verificarLoginNuvem, salvarUsuarioNuvem, excluirUsuarioNuvem
   };
 })();
@@ -207,7 +335,16 @@ window.Nuvem = Nuvem;
 /* Embrulha DB.salvarOS/excluirOS para espelhar na nuvem, sem alterar o core. */
 (function ligarNuvem() {
   const _salvar = DB.salvarOS, _excluir = DB.excluirOS;
-  DB.salvarOS = function (os) { const r = _salvar.call(DB, os); try { Nuvem.aoSalvar(r); } catch (e) { } return r; };
+  const _salvarV = DB.salvarVeiculo;
+  DB.salvarOS = function (os) {
+    const v = DB.veiculo(os.veiculoId), kmAntes = v ? v.kmAtual : null, dataAntes = v ? v.kmAtualData : null;
+    const r = _salvar.call(DB, os);
+    try { Nuvem.aoSalvar(r); } catch (e) { }
+    // o KM/H atual do veículo muda ao lançar uma O.S.: leva o veículo atualizado junto
+    try { const v2 = DB.veiculo(r.veiculoId); if (v2 && (v2.kmAtual !== kmAntes || v2.kmAtualData !== dataAntes)) Nuvem.aoSalvarVeiculo(v2); } catch (e) { }
+    return r;
+  };
+  DB.salvarVeiculo = function (v) { const r = _salvarV.call(DB, v); try { Nuvem.aoSalvarVeiculo(r); } catch (e) { } return r; };
   DB.excluirOS = function (id) { const r = _excluir.call(DB, id); try { Nuvem.aoExcluir(id); } catch (e) { } return r; };
 
   // Embrulha DB.salvarUsuario/excluirUsuario do mesmo jeito, pra criação/edição/

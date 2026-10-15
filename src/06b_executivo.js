@@ -169,7 +169,7 @@ const Executivo = (() => {
     const hoje = Dt.today();
     add('data-suspeita', 'medio', 'Data suspeita ou no futuro', 'Data posterior a hoje ou marcada como suspeita na importação da planilha: pode ser erro de digitação e distorce a evolução mensal.',
       os.filter(o => o.data && (o.data > hoje || o.dataSuspeita)).map(o => ({ os: o, motivo: o.data > hoje ? 'Data ' + Fmt.date(o.data) + ' é depois de hoje' : 'Data marcada como suspeita na importação' })));
-    add('veic-sem-cadastro', 'alto', 'O.S. de veículo que não está no cadastro', 'Sem cadastro, a categoria e o nome do veículo não podem ser lidos.',
+    add('veic-sem-cadastro', 'alto', 'O.S. de veículo que não está no cadastro', 'Sem cadastro neste aparelho, a categoria e o nome do veículo não podem ser lidos. A causa mais comum é o veículo ter sido cadastrado em outro computador antes do cadastro ir para a nuvem (v6.20): entre no sistema naquele computador e clique em "Atualizar agora" para ele enviar os veículos.',
       os.filter(o => !DB.veiculo(o.veiculoId)).map(o => ({ os: o, motivo: 'Veículo "' + (o.veiculoId || '—') + '" não cadastrado' })));
     add('placa-fora', 'medio', 'Placa fora do padrão', 'Placas que não seguem o formato antigo (AAA1234) nem o Mercosul (AAA1B23): possível erro de digitação.',
       os.filter(o => { const p = placaNorm(o.placa); return p && !placaValida(p); }).map(o => ({ os: o, motivo: 'Placa "' + o.placa + '"' })));
@@ -217,7 +217,10 @@ const Executivo = (() => {
       semCod.map(o => ({ os: o, motivo: o.itens.filter(i => !i.servicoCod).length + ' item(ns) sem catálogo' })));
     const sn = (window.Nuvem && Nuvem.statusNaNuvem) ? Nuvem.statusNaNuvem() : null;
     if (sn !== true) add('status-nuvem', sn === false ? 'alto' : 'info', sn === false ? 'Situação da O.S. ainda não é gravada na nuvem' : 'Situação na nuvem ainda não verificada',
-      sn === false ? 'A coluna "status" não existe na tabela da nuvem. As situações (aberta, em andamento, concluída) valem só neste aparelho e podem divergir entre computadores. Para corrigir, criar a coluna no banco (arquivo supabase_ordens_status.sql).' : 'Abra a página depois de sincronizar (botão "Atualizar agora") para verificar.', [], { fixo: true });
+      sn === false ? 'A coluna "status" não existe na tabela da nuvem. As situações (aberta, em andamento, concluída) valem só neste aparelho e podem divergir entre computadores. Para corrigir, criar a coluna no banco (arquivo supabase_v620.sql, no SQL Editor do Supabase).' : 'Abra a página depois de sincronizar (botão "Atualizar agora") para verificar.', [], { fixo: true });
+    const vn = (window.Nuvem && Nuvem.statusVeiculosNuvem) ? Nuvem.statusVeiculosNuvem() : null;
+    if (vn !== true) add('veic-nuvem', vn === false ? 'alto' : 'info', vn === false ? 'Cadastro de veículos ainda não é compartilhado na nuvem' : 'Cadastro de veículos na nuvem ainda não verificado',
+      vn === false ? 'A tabela "veiculos" não existe na nuvem. Cada computador mantém o seu próprio cadastro, então categoria e nome do veículo podem divergir. Para corrigir, criar a tabela no banco (arquivo supabase_v620.sql, no SQL Editor do Supabase).' : 'Abra a página depois de sincronizar (botão "Atualizar agora") para verificar.', [], { fixo: true });
     return out;
   }
 
@@ -384,11 +387,59 @@ const Executivo = (() => {
     const v = bg.querySelector('#ind-csv');
     if (v) v.addEventListener('click', () => baixarCSV('executivo_' + d.nome.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '.csv', d.conjunto));
   }
+  const escCSV = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
+  function baixarTexto(nome, linhas) {
+    const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  const csvRenumeracao = prop => ['ID da O.S.;Nº antigo;Nº novo;Data;Veículo;Placa;Responsável;Valor'].concat(prop.map(m => {
+    const v = dadosVeic(m.os);
+    return [m.os.id, m.de, m.para, m.os.data || '', v.nome, v.placa, m.os.mecanico || '', String(m.os.total || 0).replace('.', ',')].map(escCSV).join(';');
+  }));
+  const assinaturaProp = prop => prop.map(m => m.os.id + '>' + m.para).join('|');
+
+  /* Corrige números de O.S. repetidos. Regra: a O.S. mais antiga (pela data) mantém o número; as outras
+     recebem números novos acima do maior número existente (incluindo o da nuvem). Primeiro mostra o que
+     vai mudar; só altera depois do clique em "Aplicar". A nuvem é atualizada ANTES do aparelho. */
+  function janelaRenumeracao() {
+    const prop = DB.propostaRenumeracao();
+    if (!prop.length) { UI.toast('Nenhum número repetido para corrigir.', 'ok'); return; }
+    const cols = [{ t: 'Data', k: 'd' }, { t: 'Veículo', k: 'v' }, { t: 'Valor', k: 't', cls: 'ta-r' }, { t: 'Nº atual', k: 'de' }, { t: 'Passa a ser', k: 'para' }];
+    const linhas = prop.map(m => { const v = dadosVeic(m.os); return { d: Fmt.date(m.os.data), v: `${Fmt.esc(v.nome)} <span class="dim mono">${Fmt.esc(v.placa)}</span>`, t: Fmt.money(m.os.total), de: `<span class="dim">${Fmt.esc(m.de)}</span>`, para: `<span class="strong">${Fmt.esc(m.para)}</span>` }; });
+    const corpo = `<p><b>${Fmt.num(prop.length)} O.S.</b> vão receber número novo. Em cada número repetido, a O.S. <b>mais antiga</b> (pela data) continua com o número; as outras passam a usar números ainda livres, em ordem de data.</p>
+      <p class="ind-aviso">Atenção: se alguma dessas O.S. já foi impressa ou citada com o número antigo, use o CSV abaixo para conferir "nº antigo → nº novo". O valor, a data e os itens não mudam.</p>
+      ${UI.tabela(cols, linhas.slice(0, 200))}${linhas.length > 200 ? `<p class="dim">Mostrando 200 de ${linhas.length}. O CSV traz todas.</p>` : ''}`;
+    const bg = UI.modal('Corrigir números repetidos', corpo,
+      `<button type="button" class="btn ghost" id="rn-csv">Baixar CSV (de → para)</button><div class="spacer"></div><button type="button" class="btn ghost" data-fechar>Cancelar</button><button type="button" class="btn" id="rn-aplicar">Aplicar renumeração</button>`, '820px');
+    bg.querySelector('#rn-csv').addEventListener('click', () => baixarTexto('renumeracao_os_previa.csv', csvRenumeracao(prop)));
+    const bt = bg.querySelector('#rn-aplicar');
+    bt.addEventListener('click', async () => {
+      bt.disabled = true; bt.textContent = 'Conferindo a nuvem…';
+      let atual = null;
+      try {
+        const ok = !!(window.Nuvem && await Nuvem.sincronizar());
+        if (ok) { const mx = await Nuvem.atualizarMaximo(); if (mx !== null) atual = DB.propostaRenumeracao(); }
+      } catch (e) { }
+      if (!atual) { UI.toast('Sem conexão com a nuvem. Nada foi alterado — tente de novo com internet.', 'warn'); bt.disabled = false; bt.textContent = 'Aplicar renumeração'; return; }
+      if (assinaturaProp(atual) !== assinaturaProp(prop)) { UI.fecharModal(); UI.toast('A nuvem mudou desde que você abriu esta tela. Confira a nova prévia.', 'warn'); if (atual.length) janelaRenumeracao(); else App.render(); return; }
+      bt.textContent = 'Gravando na nuvem…';
+      try { await Nuvem.enviarOrdens(prop.map(m => Object.assign({}, m.os, { numero: m.para }))); }
+      catch (e) { UI.toast('Não foi possível gravar na nuvem (' + e.message + '). Nada foi alterado neste aparelho.', 'err'); bt.disabled = false; bt.textContent = 'Aplicar renumeração'; return; }
+      DB.aplicarRenumeracao(prop);
+      baixarTexto('renumeracao_os_aplicada.csv', csvRenumeracao(prop));
+      UI.fecharModal(); UI.toast(prop.length + ' O.S. renumeradas. O CSV com "nº antigo → nº novo" foi baixado.', 'ok'); App.render();
+    });
+  }
+
   function janelaQualidade(i) {
+    const pode = i.id === 'num-repetido' && Perm.pode('os.editar') && Perm.pode('os.excluir') && DB.propostaRenumeracao().length > 0;
     const bg = UI.modal(i.titulo, `<p>${Fmt.esc(i.detalhe)}</p>${tabelaOS(i.itens, true)}`,
-      `<button type="button" class="btn ghost" id="q-csv">Baixar CSV</button><div class="spacer"></div><button type="button" class="btn" data-fechar>Fechar</button>`, '820px');
+      `<button type="button" class="btn ghost" id="q-csv">Baixar CSV</button>${pode ? '<button type="button" class="btn ghost" id="q-corrigir">Corrigir números repetidos</button>' : ''}<div class="spacer"></div><button type="button" class="btn" data-fechar>Fechar</button>`, '820px');
     ligarLinhasOS(bg);
     bg.querySelector('#q-csv').addEventListener('click', () => baixarCSV('qualidade_' + i.id + '.csv', i.itens.map(z => z.os)));
+    const c = bg.querySelector('#q-corrigir');
+    if (c) c.addEventListener('click', () => { UI.fecharModal(); janelaRenumeracao(); });
   }
 
   /* ---------- página ---------- */
