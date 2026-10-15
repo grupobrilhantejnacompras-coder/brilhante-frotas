@@ -494,7 +494,12 @@ tbody tr.clickable{cursor:pointer} tbody tr.clickable:hover{background:var(--bra
   width:clamp(104px,20vw,168px); color:#fff; will-change:transform,opacity,filter;
   animation:ea-grow 2.6s cubic-bezier(.22,.61,.36,1) both;
 }
-.ea-logo svg{display:block; width:100%; height:auto; fill:#fff}
+.ea-logo svg{
+  display:block; width:100%; height:auto; fill:#fff;
+  /* brilho que acompanha o contorno da silhueta da logo (drop-shadow segue a forma, não a caixa) */
+  filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 10px rgba(138,145,207,.9)) drop-shadow(0 0 26px rgba(184,146,74,.6));
+  animation:ea-glow 2.6s ease-in-out both;
+}
 .ea-part{
   width:3px; height:3px; border-radius:50%; background:var(--gold); opacity:0; will-change:transform,opacity;
   animation:ea-spark 1.7s ease-out both;
@@ -508,12 +513,19 @@ tbody tr.clickable{cursor:pointer} tbody tr.clickable:hover{background:var(--bra
   80%{transform:scale(1.05); opacity:1}
   100%{transform:scale(1.1); opacity:0}
 }
+@keyframes ea-glow{
+  0%,12%{filter:drop-shadow(0 0 0 rgba(255,255,255,0)) drop-shadow(0 0 0 rgba(138,145,207,0)) drop-shadow(0 0 0 rgba(184,146,74,0))}
+  45%{filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 10px rgba(138,145,207,.9)) drop-shadow(0 0 26px rgba(184,146,74,.6))}
+  62%{filter:drop-shadow(0 0 3px rgba(255,255,255,1)) drop-shadow(0 0 16px rgba(138,145,207,1)) drop-shadow(0 0 40px rgba(184,146,74,.85))}
+  80%{filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 10px rgba(138,145,207,.9)) drop-shadow(0 0 26px rgba(184,146,74,.6))}
+  100%{filter:drop-shadow(0 0 3px rgba(255,255,255,1)) drop-shadow(0 0 16px rgba(138,145,207,1)) drop-shadow(0 0 40px rgba(184,146,74,.85))}
+}
 @keyframes ea-spark{
   0%{opacity:0; transform:translate(0,0) scale(.4)} 30%{opacity:.8}
   100%{opacity:0; transform:translate(var(--x),var(--y)) scale(1)}
 }
 @media (prefers-reduced-motion:reduce){
   #entrada-anim{animation:ea-bgin .2s ease both}
-  .ea-logo,.ea-part{animation:none}
+  .ea-logo,.ea-part,.ea-logo svg{animation:none}
   .ea-logo{opacity:1; transform:none}
 }

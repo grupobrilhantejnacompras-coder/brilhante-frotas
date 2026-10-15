@@ -12,6 +12,9 @@ const Nuvem = (() => {
   const H = { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' };
   let online = true;
 
+  // A coluna "status" (situação da O.S.) pode ainda não existir na tabela da nuvem.
+  // null = não sei; true = existe; false = não existe (então não é enviada).
+  let colStatus = null;
   // OS do app  ->  linha do banco
   const paraLinha = o => ({
     id: o.id, numero: o.numero ?? null, data: o.data || null, veiculo_id: o.veiculoId || null,
@@ -19,7 +22,8 @@ const Nuvem = (() => {
     mecanico: o.mecanico || null, km_h: (o.kmH ?? null), tipo_medidor: o.tipoMedidor || null,
     obs: o.obs || null, itens: o.itens || [], total: o.total || 0,
     criado_por: o.criadoPor || null, criado_data: o.criadoData || null, criado_hora: o.criadoHora || null,
-    alterado_por: o.alteradoPor || null, alterado_data: o.alteradoData || null, alterado_hora: o.alteradoHora || null
+    alterado_por: o.alteradoPor || null, alterado_data: o.alteradoData || null, alterado_hora: o.alteradoHora || null,
+    ...(colStatus !== false ? { status: o.status || null } : {})
   });
   // linha do banco  ->  OS do app
   const paraOS = l => ({
@@ -28,7 +32,8 @@ const Nuvem = (() => {
     mecanico: l.mecanico, kmH: l.km_h == null ? null : Number(l.km_h),
     tipoMedidor: l.tipo_medidor, obs: l.obs, itens: l.itens || [], total: Number(l.total) || 0,
     criadoPor: l.criado_por, criadoData: l.criado_data, criadoHora: l.criado_hora,
-    alteradoPor: l.alterado_por, alteradoData: l.alterado_data, alteradoHora: l.alterado_hora
+    alteradoPor: l.alterado_por, alteradoData: l.alterado_data, alteradoHora: l.alterado_hora,
+    status: l.status || ''
   });
 
   async function req(path, opts, timeoutMs) {
@@ -40,16 +45,28 @@ const Nuvem = (() => {
       return r;
     } finally { clearTimeout(t); }
   }
-  const enviarUma = os => req('ordens', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(paraLinha(os)) });
-  // envia várias de uma vez (migração), em blocos
-  async function enviarVarias(lista) {
-    for (let i = 0; i < lista.length; i += 100) {
-      const bloco = lista.slice(i, i + 100).map(paraLinha);
-      await req('ordens', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(bloco) });
+  // Envia O.S. (uma ou várias). Se o banco recusar por causa da coluna "status" que
+  // ainda não existe, reenvia sem ela — a O.S. nunca deixa de ser salva por isso.
+  async function postarOrdens(lista) {
+    const enviar = () => req('ordens', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(lista.map(paraLinha)) });
+    try { await enviar(); }
+    catch (e) {
+      if (colStatus === false || !/ 400$/.test(e.message)) throw e;
+      colStatus = false;
+      try { await enviar(); } catch (e2) { colStatus = null; throw e2; }
     }
   }
+  const enviarUma = os => postarOrdens([os]);
+  // envia várias de uma vez (migração), em blocos
+  async function enviarVarias(lista) {
+    for (let i = 0; i < lista.length; i += 100) await postarOrdens(lista.slice(i, i + 100));
+  }
   const apagarUma = id => req('ordens?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
-  async function baixarTodas() { return (await (await req('ordens?select=*')).json()).map(paraOS); }
+  async function baixarTodas() {
+    const linhas = await (await req('ordens?select=*')).json();
+    if (linhas.length) colStatus = ('status' in linhas[0]);   // a nuvem mostra se tem a coluna
+    return linhas.map(paraOS);
+  }
 
   function marcadas() { return new Set(DB.get().sincronizados || []); }
   function marcar(ids, incluir) {
@@ -67,6 +84,15 @@ const Nuvem = (() => {
     let remotas;
     try { remotas = await baixarTodas(); online = true; }
     catch (e) { online = false; return false; }               // offline: mantém o local
+    // Situação da O.S.: a que veio da nuvem vale; se a nuvem ainda não tem (coluna nova ou
+    // ficha antiga), mantém a deste aparelho; sem nenhuma, usa 'Concluída' (padrão do sistema).
+    const locaisPorId = new Map(base.ordens.map(o => [o.id, o]));
+    const semStatusNaNuvem = [];
+    remotas.forEach(o => {
+      if (o.status) return;
+      o.status = (locaisPorId.get(o.id) || {}).status || 'Concluída';
+      semStatusNaNuvem.push(o);
+    });
     const idsRemotos = new Set(remotas.map(o => o.id));
     const jaSync = marcadas();
     // sobe as locais nunca sincronizadas
@@ -83,6 +109,10 @@ const Nuvem = (() => {
     if (renomeadas.length) {
       try { await enviarVarias(renomeadas); }
       catch (e) { online = false; base.sincronizados = base.sincronizados.filter(id => !renomeadas.some(o => o.id === id)); }
+    }
+    // Coluna "status" já existe no banco mas estas O.S. ainda estão sem situação lá: grava.
+    if (colStatus === true && semStatusNaNuvem.length) {
+      try { await enviarVarias(semStatusNaNuvem); } catch (e) { /* tenta de novo na próxima */ }
     }
     DB.save();
     return true;
