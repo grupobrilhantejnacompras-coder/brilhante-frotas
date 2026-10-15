@@ -35,7 +35,7 @@ async function ligarNuvem(ctx, estado) {
     if (q.method() === 'DELETE') { C.ordens.delete(decodeURIComponent(u.searchParams.get('id') || '').replace(/^eq\./, '')); return rt.fulfill({ status: 204, body: '' }); }
     return rt.fulfill({ status: 200, body: '[]' });
   });
-  await ctx.route(/supabase\.co\/rest\/v1\/veiculos/, async rt => {
+  await ctx.route(/supabase\.co\/rest\/v1\/veiculos_cadastro/, async rt => {
     if (estado.offline) return rt.abort();
     if (!C.tabelaVeic) return rt.fulfill({ status: 404, contentType: 'application/json', body: '{"code":"PGRST205","message":"Could not find the table \'public.veiculos\' in the schema cache"}' });
     const q = rt.request();
@@ -47,7 +47,7 @@ async function ligarNuvem(ctx, estado) {
     }
     return rt.fulfill({ status: 200, body: '[]' });
   });
-  await ctx.route(/supabase\.co\/(?!rest\/v1\/(ordens|veiculos))/, r => r.abort());
+  await ctx.route(/supabase\.co\/(?!rest\/v1\/(ordens|veiculos_cadastro))/, r => r.abort());
 }
 const novoPc = async b => { const estado = {}; const ctx = await b.newContext({ viewport: { width: 1366, height: 768 }, reducedMotion: 'reduce', acceptDownloads: true }); await ligarNuvem(ctx, estado); const p = await ctx.newPage(); p.on('pageerror', e => erros.push(e.message)); return { ctx, p, estado }; };
 const abrir = async (pc, u, s) => { await pc.p.goto(path); await login(pc.p, u, s); await pc.p.waitForTimeout(2500); };
