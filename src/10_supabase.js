@@ -11,6 +11,8 @@ const Nuvem = (() => {
   const KEY = 'sb_publishable_YCcTEzIBU08P-P-xxlKTkA_2eJE-irT';
   const H = { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' };
   let online = true;
+  let ultimaSync = null;                                       // quando a nuvem foi lida com sucesso pela última vez
+  try { ultimaSync = localStorage.getItem('brilhante_ultima_sync'); } catch (e) { }
 
   // A coluna "status" (situação da O.S.) pode ainda não existir na tabela da nuvem.
   // null = não sei; true = existe; false = não existe (então não é enviada).
@@ -115,6 +117,8 @@ const Nuvem = (() => {
       try { await enviarVarias(semStatusNaNuvem); } catch (e) { /* tenta de novo na próxima */ }
     }
     DB.save();
+    ultimaSync = new Date().toISOString();
+    try { localStorage.setItem('brilhante_ultima_sync', ultimaSync); } catch (e) { }
     return true;
   }
 
@@ -194,6 +198,7 @@ const Nuvem = (() => {
 
   return {
     sincronizar, aoSalvar, aoExcluir, get online() { return online; },
+    get ultimaSync() { return ultimaSync; }, statusNaNuvem: () => colStatus,
     sincronizarUsuarios, verificarLoginNuvem, salvarUsuarioNuvem, excluirUsuarioNuvem
   };
 })();

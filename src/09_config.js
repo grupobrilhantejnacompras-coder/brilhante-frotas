@@ -182,6 +182,7 @@ App.registrar('servicos', Servicos.pagina);
 App.registrar('veiculos', Veiculos.pagina);
 App.registrar('veiculo', Veiculos.pagina);
 App.registrar('relatorios', Relatorios.pagina);
+App.registrar('executivo', Executivo.pagina);
 App.registrar('reincidencias', Reincidencias.pagina);
 App.registrar('config', Config.pagina);
 App.registrar('usuarios', Usuarios.pagina);

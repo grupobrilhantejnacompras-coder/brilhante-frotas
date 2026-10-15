@@ -143,6 +143,7 @@ const MENU = [
   { id: 'servicos', nome: 'Serviços', ic: 'serv', perm: 'servicos.ver' },
   { id: 'veiculos', nome: 'Veículos', ic: 'veic', perm: 'veiculos.ver' },
   { sec: 'Gestão' },
+  { id: 'executivo', nome: 'Painel executivo', ic: 'grafico', perm: 'relatorios.ver' },
   { id: 'relatorios', nome: 'Relatórios', ic: 'rel', perm: 'relatorios.ver' },
   { id: 'reincidencias', nome: 'Reincidências', ic: 'alerta', perm: 'reincidencias.ver', badge: () => Painel.totalReincidencias() },
   { sec: 'Sistema' },
@@ -154,7 +155,7 @@ const MENU = [
 const PERM_PAGINA = {
   'dashboard': 'dashboard', 'nova-os': 'os.criar', 'ordens': 'os.ver',
   'servicos': 'servicos.ver', 'veiculos': 'veiculos.ver', 'veiculo': 'veiculos.ver',
-  'relatorios': 'relatorios.ver', 'reincidencias': 'reincidencias.ver',
+  'relatorios': 'relatorios.ver', 'executivo': 'relatorios.ver', 'reincidencias': 'reincidencias.ver',
   'usuarios': 'usuarios', 'config': 'config', 'minha-conta': null, 'sem-acesso': null,
 };
 
@@ -166,6 +167,7 @@ const TITULOS = {
   'veiculos': ['Cadastro', 'Veículos da frota'],
   'veiculo': ['Cadastro', 'Histórico do veículo'],
   'relatorios': ['Gestão', 'Relatórios'],
+  'executivo': ['Diretoria', 'Painel executivo da frota'],
   'reincidencias': ['Gestão', 'Análise de reincidências'],
   'config': ['Sistema', 'Configurações'],
   'usuarios': ['Sistema', 'Usuários e acessos'],
