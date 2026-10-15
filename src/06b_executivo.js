@@ -53,8 +53,8 @@ const Executivo = (() => {
     if (f.veiculo) c.push(`veiculo_id = '${aq(f.veiculo)}'  -- ${DB.rotuloVeiculo(f.veiculo)}`);
     if (placaNorm(f.placa)) c.push(`upper(regexp_replace(placa, '[^A-Za-z0-9]', '', 'g')) LIKE '%${aq(placaNorm(f.placa))}%'`);
     if (f.categoria) c.push(f.categoria === SEM_CAT
-      ? `veiculo_id NOT IN (SELECT id FROM veiculos WHERE coalesce(tipo, '') <> '')`
-      : `veiculo_id IN (SELECT id FROM veiculos WHERE tipo = '${aq(f.categoria)}')`);
+      ? `veiculo_id NOT IN (SELECT id FROM veiculos_cadastro WHERE coalesce(tipo, '') <> '')`
+      : `veiculo_id IN (SELECT id FROM veiculos_cadastro WHERE tipo = '${aq(f.categoria)}')`);
     if (f.status) c.push(f.status === SEM_SIT ? `coalesce(status, '') = ''` : `status = '${aq(f.status)}'`);
     if (f.resp) c.push(`mecanico ILIKE '%${aq(f.resp)}%'`);
     if (semCanceladas) c.push(`status IS DISTINCT FROM 'Cancelada'`);
@@ -147,7 +147,7 @@ const Executivo = (() => {
       sql: sql("SELECT substr(data, 1, 7) AS mes, count(*) AS qtd_os, sum(total) AS gasto", f, { semCanceladas: true, extra: ['data IS NOT NULL'], tail: 'GROUP BY 1\nORDER BY 1' }) };
     D.categoria = { ...base, nome: 'Custo por categoria de frota', valor: x.categorias.length + ' categorias', conjunto: x.osC,
       explica: ['Cada O.S. recebe a categoria do veículo no cadastro de veículos (campo Tipo: Caminhão, Trator, Carreta…).', 'Veículo sem tipo ou fora do cadastro entra em "(sem categoria)". O cadastro de veículos é do sistema, não é lido da nuvem.'],
-      sql: sql("SELECT coalesce(nullif(v.tipo, ''), '(sem categoria)') AS categoria, count(*) AS qtd_os, sum(o.total) AS gasto", f, { semCanceladas: true, from: 'ordens o LEFT JOIN veiculos v ON v.id = o.veiculo_id', tail: 'GROUP BY 1\nORDER BY 3 DESC' }) };
+      sql: sql("SELECT coalesce(nullif(v.tipo, ''), '(sem categoria)') AS categoria, count(*) AS qtd_os, sum(o.total) AS gasto", f, { semCanceladas: true, from: 'ordens o LEFT JOIN veiculos_cadastro v ON v.id = o.veiculo_id', tail: 'GROUP BY 1\nORDER BY 3 DESC' }) };
     D.veiculosCusto = { ...base, nome: 'Veículos com maior custo de manutenção', valor: Fmt.num(x.veiculos.length) + ' veículos', conjunto: x.osC,
       explica: ['Soma o Total das O.S. não canceladas por veículo (identificado pelo cadastro) e ordena do maior para o menor.', 'A placa é a do cadastro do veículo. Equipamentos sem placa aparecem como "sem placa" e continuam separados pelo veículo.'],
       sql: sql('SELECT veiculo_id, max(placa) AS placa, count(*) AS qtd_os, sum(total) AS gasto', f, { semCanceladas: true, tail: 'GROUP BY veiculo_id\nORDER BY gasto DESC' }) };
@@ -220,7 +220,7 @@ const Executivo = (() => {
       sn === false ? 'A coluna "status" não existe na tabela da nuvem. As situações (aberta, em andamento, concluída) valem só neste aparelho e podem divergir entre computadores. Para corrigir, criar a coluna no banco (arquivo supabase_v620.sql, no SQL Editor do Supabase).' : 'Abra a página depois de sincronizar (botão "Atualizar agora") para verificar.', [], { fixo: true });
     const vn = (window.Nuvem && Nuvem.statusVeiculosNuvem) ? Nuvem.statusVeiculosNuvem() : null;
     if (vn !== true) add('veic-nuvem', vn === false ? 'alto' : 'info', vn === false ? 'Cadastro de veículos ainda não é compartilhado na nuvem' : 'Cadastro de veículos na nuvem ainda não verificado',
-      vn === false ? 'A tabela "veiculos" não existe na nuvem. Cada computador mantém o seu próprio cadastro, então categoria e nome do veículo podem divergir. Para corrigir, criar a tabela no banco (arquivo supabase_v620.sql, no SQL Editor do Supabase).' : 'Abra a página depois de sincronizar (botão "Atualizar agora") para verificar.', [], { fixo: true });
+      vn === false ? 'A tabela "veiculos_cadastro" não existe na nuvem. Cada computador mantém o seu próprio cadastro, então categoria e nome do veículo podem divergir. Para corrigir, criar a tabela no banco (arquivo supabase_v620.sql, no SQL Editor do Supabase).' : 'Abra a página depois de sincronizar (botão "Atualizar agora") para verificar.', [], { fixo: true });
     return out;
   }
 

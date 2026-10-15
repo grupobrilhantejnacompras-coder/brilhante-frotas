@@ -5,7 +5,7 @@
    offline: se a internet cair, o app segue funcionando e
    sincroniza quando a conexão voltar.
    Desde a v6.20 o cadastro de veículos também é espelhado na nuvem
-   (tabela "veiculos") e a numeração das O.S. é protegida contra repetição.
+   (tabela "veiculos_cadastro") e a numeração das O.S. é protegida contra repetição.
    (Serviços seguem locais.)
    ============================================================ */
 const Nuvem = (() => {
@@ -188,7 +188,7 @@ const Nuvem = (() => {
   function aoExcluir(id) { apagarUma(id).catch(() => {}); }
 
   /* ---------- Veículos (cadastro compartilhado) ----------
-     Tabela "veiculos" (ver supabase_v620.sql). Se ela ainda não existir, nada muda:
+     Tabela "veiculos_cadastro" (ver supabase_v620.sql). Se ela ainda não existir, nada muda:
      o cadastro segue local e o app funciona como antes. */
   let veicNuvem = null;                                        // null = não sei; true = tabela existe; false = não existe
   const veicParaLinha = v => ({ id: v.id, nome: v.nome || null, placa: v.placa || null, tipo: v.tipo || null, dados: v, atualizado_em: new Date().toISOString() });
@@ -211,7 +211,7 @@ const Nuvem = (() => {
   }
   async function postarVeiculos(lista) {
     for (let i = 0; i < lista.length; i += 100)
-      await req('veiculos', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(lista.slice(i, i + 100).map(veicParaLinha)) }, 12000);
+      await req('veiculos_cadastro', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(lista.slice(i, i + 100).map(veicParaLinha)) }, 12000);
   }
   function pendenciaVeic(ids, incluir) {
     const b = DB.get(); const s = new Set(b.veiculosPendentes || []);
@@ -222,7 +222,7 @@ const Nuvem = (() => {
      edições feitas aqui e ainda não enviadas não são sobrescritas. Devolve true se o local mudou. */
   async function sincronizarVeiculos() {
     let linhas;
-    try { linhas = await (await req('veiculos?select=*&limit=5000', {}, 10000)).json(); veicNuvem = true; }
+    try { linhas = await (await req('veiculos_cadastro?select=*&limit=5000', {}, 10000)).json(); veicNuvem = true; }
     catch (e) { if (/ (400|404)$/.test(e.message)) veicNuvem = false; return false; }
     const b = DB.get();
     const pend = new Set(b.veiculosPendentes || []);
