@@ -5,7 +5,7 @@ import json, pathlib, datetime, hashlib, base64
 
 BASE = pathlib.Path(__file__).resolve().parent
 SRC = BASE / 'src'
-ORDEM = ['01_core.js', '02_ui.js', '03_app.js', '04_pages_os.js', '05_filtros.js',
+ORDEM = ['01_core.js', '02_ui.js', '03_app.js', '04_pages_os.js', '04b_impressao_os.js', '05_filtros.js',
          '06_painel.js', '06b_executivo.js', '07_relatorios.js', '08_importar.js', '08b_exportar.js', '08c_usuarios.js', '09_config.js', '10_supabase.js']
 
 css = (SRC / 'style.css').read_text(encoding='utf-8')
