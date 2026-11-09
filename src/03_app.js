@@ -10,6 +10,7 @@ const Ico = (() => {
     lista: w('<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>'),
     serv: w('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/>'),
     veic: w('<path d="M3 16V7a1 1 0 0 1 1-1h10v10M14 10h4l3 3v3h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>'),
+    gota: w('<path d="M12 3s6 6.2 6 10.5A6 6 0 0 1 6 13.5C6 9.2 12 3 12 3z"/>'),
     rel: w('<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'),
     alerta: w('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>'),
     conf: w('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
@@ -127,7 +128,7 @@ const Auth = {
   paginaInicial() {
     const ordem = [['dashboard', 'dashboard'], ['os.criar', 'nova-os'], ['os.ver', 'ordens'],
     ['relatorios.ver', 'relatorios'], ['veiculos.ver', 'veiculos'], ['servicos.ver', 'servicos'],
-    ['usuarios', 'usuarios'], ['config', 'config']];
+    ['combustivel.ver', 'combustivel'], ['usuarios', 'usuarios'], ['config', 'config']];
     const achou = ordem.find(([perm]) => Perm.pode(perm));
     return achou ? achou[1] : 'sem-acesso';
   }
@@ -146,6 +147,8 @@ const MENU = [
   { id: 'executivo', nome: 'Painel executivo', ic: 'grafico', perm: 'relatorios.ver' },
   { id: 'relatorios', nome: 'Relatórios', ic: 'rel', perm: 'relatorios.ver' },
   { id: 'reincidencias', nome: 'Reincidências', ic: 'alerta', perm: 'reincidencias.ver', badge: () => Painel.totalReincidencias() },
+  { sec: 'Combustíveis' },
+  { id: 'combustivel', nome: 'Relatórios', ic: 'gota', perm: 'combustivel.ver' },
   { sec: 'Sistema' },
   { id: 'usuarios', nome: 'Usuários', ic: 'user', perm: 'usuarios' },
   { id: 'config', nome: 'Configurações', ic: 'conf', perm: 'config' },
@@ -155,7 +158,7 @@ const MENU = [
 const PERM_PAGINA = {
   'dashboard': 'dashboard', 'nova-os': 'os.criar', 'ordens': 'os.ver',
   'servicos': 'servicos.ver', 'veiculos': 'veiculos.ver', 'veiculo': 'veiculos.ver',
-  'relatorios': 'relatorios.ver', 'executivo': 'relatorios.ver', 'reincidencias': 'reincidencias.ver',
+  'relatorios': 'relatorios.ver', 'executivo': 'relatorios.ver', 'reincidencias': 'reincidencias.ver', 'combustivel': 'combustivel.ver',
   'usuarios': 'usuarios', 'config': 'config', 'minha-conta': null, 'sem-acesso': null,
 };
 
@@ -169,6 +172,7 @@ const TITULOS = {
   'relatorios': ['Gestão', 'Relatórios'],
   'executivo': ['Diretoria', 'Painel executivo da frota'],
   'reincidencias': ['Gestão', 'Análise de reincidências'],
+  'combustivel': ['Combustíveis', 'Relatórios de combustível'],
   'config': ['Sistema', 'Configurações'],
   'usuarios': ['Sistema', 'Usuários e acessos'],
   'minha-conta': ['Sistema', 'Minha conta'],

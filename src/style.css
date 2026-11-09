@@ -564,3 +564,29 @@ pre.sql{margin:0; padding:var(--s3) var(--s4); border-radius:9px; background:var
 .modal code{padding:1px 5px; border-radius:4px; background:var(--brand-50); color:var(--brand-800); font-size:12px}
 @media (max-width:640px){ .fx-grid{grid-template-columns:repeat(2,minmax(0,1fr))} .ex-head .card-b{padding:var(--s4)} }
 @media (max-width:900px){ .ex-g2{grid-template-columns:1fr} }
+
+/* --------------------------------------------------- impressão da ordem de serviço (modelo A4) */
+.os-folha{position:relative; width:210mm; height:297mm; background:#fff; color:#111827; overflow:hidden;
+  font-family:Helvetica,Arial,"Liberation Sans",sans-serif; box-shadow:0 1px 3px rgba(17,24,39,.18),0 8px 24px rgba(17,24,39,.12);
+  -webkit-print-color-adjust:exact; print-color-adjust:exact}
+.os-folha > *{position:absolute; margin:0; white-space:pre; line-height:1.2; font-style:normal}
+.os-folha .osf-logo svg{display:block; width:100%; height:100%}
+.osp-barra{margin:0 0 var(--s3)}
+.osp-area{background:#E5E7EB; border-radius:var(--r-md,10px); padding:12px; max-height:64vh; overflow:auto}
+.osp-pg{margin:0 auto 14px; position:relative}
+.osp-pg:last-child{margin-bottom:0}
+.osp-esc{transform-origin:0 0; width:210mm; height:297mm}
+#os-print-root{display:none}
+@media print{
+  body.imprimindo-os > *:not(#os-print-root){display:none !important}
+  body.imprimindo-os{background:#fff !important}
+  body.imprimindo-os #os-print-root{display:block !important}
+  #os-print-root .os-folha{box-shadow:none; height:296.5mm; break-after:page; page-break-after:always}
+  #os-print-root .os-folha:last-child{break-after:auto; page-break-after:auto}
+}
+
+/* ---------- Combustíveis (módulo separado, painel em moldura) ---------- */
+.comb-frame{height:calc(100vh - 150px); min-height:560px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff}
+.comb-frame iframe{display:block; width:100%; height:100%; border:0}
+@media (max-width:760px){ .comb-frame{height:calc(100vh - 130px); min-height:480px; border-radius:8px} }
+@media print{ .comb-frame{display:none} }

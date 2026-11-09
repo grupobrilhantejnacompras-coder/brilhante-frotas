@@ -96,6 +96,7 @@ const Perm = (() => {
     { id: 'servicos.ver', nome: 'Ver base de serviços', grupo: 'Visualizar' },
     { id: 'relatorios.ver', nome: 'Ver relatórios e painel da diretoria', grupo: 'Visualizar' },
     { id: 'reincidencias.ver', nome: 'Ver análise de reincidências', grupo: 'Visualizar' },
+    { id: 'combustivel.ver', nome: 'Ver relatórios de combustível', grupo: 'Combustíveis' },
     { id: 'os.criar', nome: 'Registrar nova OS', grupo: 'Operar' },
     { id: 'os.editar', nome: 'Editar OS existente', grupo: 'Operar' },
     { id: 'os.excluir', nome: 'Excluir OS', grupo: 'Operar' },

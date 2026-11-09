@@ -180,6 +180,7 @@ App.registrar('nova-os', Nova.pagina);
 App.registrar('ordens', Ordens.pagina);
 App.registrar('servicos', Servicos.pagina);
 App.registrar('veiculos', Veiculos.pagina);
+App.registrar('combustivel', Combustivel.relatorios);
 App.registrar('veiculo', Veiculos.pagina);
 App.registrar('relatorios', Relatorios.pagina);
 App.registrar('executivo', Executivo.pagina);

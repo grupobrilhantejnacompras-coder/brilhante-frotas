@@ -5,6 +5,7 @@ const Usuarios = (() => {
   let busca = '', filtroPerfil = '';
 
   const ehPadrao = u => {
+    if (u.perfil === 'Administrador') return true;           // administrador tem tudo, inclusive permissões criadas depois
     const p = Perm.doPerfil(u.perfil).slice().sort().join('|');
     return (u.permissoes || []).slice().sort().join('|') === p;
   };
@@ -47,7 +48,7 @@ const Usuarios = (() => {
       us: `<span class="mono">${Fmt.esc(u.usuario)}</span>`,
       pf: `<span class="badge ${u.perfil === 'Administrador' ? 'b-blue' : 'b-gray'}">${Fmt.esc(u.perfil)}</span>` +
         (ehPadrao(u) ? '' : ' <span class="badge b-amber" title="Permissões ajustadas manualmente">personalizado</span>'),
-      pm: `<span class="dim">${(u.permissoes || []).length} de ${Perm.TODAS.length}</span>`,
+      pm: `<span class="dim">${u.perfil === 'Administrador' ? Perm.TODAS.length : (u.permissoes || []).length} de ${Perm.TODAS.length}</span>`,
       st: u.status === 'Ativo' ? '<span class="badge b-green">Ativo</span>' : '<span class="badge b-gray">Inativo</span>',
       ac: `<span class="nowrap">${Fmt.date(u.ultimoAcesso) === '—' ? '<span class="dim">nunca entrou</span>' : Fmt.date(u.ultimoAcesso)}</span>`,
       ax: `<button class="btn ghost sm" data-edit-u="${u.id}">Editar</button>`,

@@ -481,6 +481,7 @@ const Ordens = (() => {
   function detalhe(id) {
     const o = DB.get().ordens.find(x => x.id === id);
     if (!o) return UI.vazio('OS não encontrada', 'Esta ordem de serviço não existe mais na base.');
+    try { ImpressaoOS.definirAtual(o); } catch (e) { }
     const v = DB.veiculo(o.veiculoId) || {};
     const ant = Rec.anteriores(o, DB.get().ordens, DB.cfg().janelaReincidencia);
     App.aoRenderizar = () => {
@@ -494,7 +495,9 @@ const Ordens = (() => {
           const nova = DB.salvarOS(c);
           UI.toast('OS duplicada como Nº ' + nova.numero, 'ok'); App.irPara('nova-os/' + nova.id);
         }
-        if (a === 'imprimir') window.print();
+        if (a === 'imprimir') ImpressaoOS.imprimir(o);
+        if (a === 'previa') ImpressaoOS.visualizar(o);
+        if (a === 'pdf') ImpressaoOS.baixarPDF(o);
         if (a === 'veiculo') App.irPara('veiculo/' + o.veiculoId);
         if (a === 'excluir') {
           UI.modal('Excluir OS Nº ' + o.numero, '<p>Esta ação remove a ordem de serviço da base. Não é possível desfazer.</p>',
@@ -507,6 +510,8 @@ const Ordens = (() => {
     };
     App.acoesTopo(`<button class="btn ghost sm" data-acao="voltar">Voltar</button>
       ${Perm.pode('os.criar') ? '<button class="btn ghost sm" data-acao="duplicar">Duplicar</button>' : ''}
+      <button class="btn ghost sm" data-acao="previa" title="Ver como a ordem sai no papel">Visualizar impressão</button>
+      <button class="btn ghost sm" data-acao="pdf">Baixar PDF</button>
       <button class="btn ghost sm" data-acao="imprimir">Imprimir</button>
       ${Perm.pode('os.editar') ? '<button class="btn sm" data-acao="editar">Editar</button>' : ''}`);
 
