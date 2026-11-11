@@ -156,7 +156,7 @@ servicos = sorted(servicos, key=lambda x: x['codigo'])
 SETORES = {
     'Mecanica':      ('Mecânica',        'Jeferson'),
     'Posto de mola': ('Posto de Mola',   'Vandame'),
-    'Ser.ar cond.':  ('Ar Condicionado', 'Gemerson'),
+    'Ser.ar cond.':  ('Ar Condicionado', 'Laion'),
 }
 registros = []   # itens brutos
 for aba,(setor, mecanico) in SETORES.items():

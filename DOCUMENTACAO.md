@@ -227,7 +227,7 @@ encontra o próprio login funcionando, sem precisar cadastrar de novo:
 | Guilherme | `Guilherme` | `0000` | Diretoria | Diretoria |
 | Jeferson | `Jeferson` | `1111` | Mecânico | Oficina |
 | Allan | `Allan` | `2222` | Mecânico | Oficina |
-| Gemerson | `Gemerson` | `3333` | Mecânico | Oficina |
+| Laion | `Laion` | `3333` | Mecânico | Oficina |
 | Vandame | `Vandame` | `4444` | Mecânico | Oficina |
 
 Taini recebeu o mesmo acesso do Kamau (Administrador), como pedido. O login não diferencia
